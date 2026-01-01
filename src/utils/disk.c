@@ -4,11 +4,11 @@ void format_disk_size(unsigned long long bytes, char *out_buffer, size_t buffer_
 {
     double size = (double)bytes;
     if (size >= 1e12) {
-        snprintf(out_buffer, buffer_size, "%.1f TB", size / 1e12);
+        snprintf(out_buffer, buffer_size, "%.0f TB", size / 1e12);
     } else if (size >= 1e9) {
-        snprintf(out_buffer, buffer_size, "%.1f GB", size / 1e9);
+        snprintf(out_buffer, buffer_size, "%.0f GB", size / 1e9);
     } else if (size >= 1e6) {
-        snprintf(out_buffer, buffer_size, "%.1f MB", size / 1e6);
+        snprintf(out_buffer, buffer_size, "%.0f MB", size / 1e6);
     } else {
         snprintf(out_buffer, buffer_size, "%llu B", bytes);
     }
