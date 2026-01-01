@@ -13,7 +13,7 @@ void display_step(WINDOW *modal, int step_number, Step *step)
     clear_modal(modal);
 
     // Display step header in bold with primary color.
-    wattron(modal, A_BOLD | COLOR_PAIR(1));
+    wattron(modal, A_BOLD | COLOR_PAIR(UI_COLOR_MAIN));
     mvwprintw(modal, 2, 3, "Step %d: %s", step_number, step->name);
     wattroff(modal, A_BOLD);
 
@@ -89,16 +89,18 @@ void render_step_options(
             }
 
             // Render " *" indicator in bold blue.
-            wattron(modal, COLOR_PAIR(6) | A_BOLD);
+            wattron(modal, COLOR_PAIR(UI_COLOR_SELECTED) | A_BOLD);
             wprintw(modal, " *");
-            wattroff(modal, COLOR_PAIR(6) | A_BOLD);
+            wattroff(modal, COLOR_PAIR(UI_COLOR_SELECTED) | A_BOLD);
         }
         else
         {
             // Render option with selection indicator.
-            mvwprintw(modal, start_y + i, 3, "  %s %s",
-                      option_index == selected ? ">" : " ",
-                      label);
+            mvwprintw(
+                modal, start_y + i, 3,
+                "  %s %s",
+                option_index == selected ? ">" : " ", label
+            );
 
             // Remove highlight after rendering.
             if (option_index == selected)
@@ -135,7 +137,7 @@ int run_selection_step(
     {
         // Clear modal and render step header.
         clear_modal(modal);
-        wattron(modal, A_BOLD | COLOR_PAIR(1));
+        wattron(modal, A_BOLD | COLOR_PAIR(UI_COLOR_MAIN));
         mvwprintw(modal, 2, 3, "Step %d: %s", step_number, title);
         wattroff(modal, A_BOLD);
 

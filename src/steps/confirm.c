@@ -11,7 +11,7 @@ int run_confirmation_step(WINDOW *modal)
 
     // Clear and draw step header.
     clear_modal(modal);
-    wattron(modal, A_BOLD | COLOR_PAIR(1));
+    wattron(modal, A_BOLD | COLOR_PAIR(UI_COLOR_MAIN));
     mvwprintw(modal, 2, 3, "Step 4: Confirm Installation");
     wattroff(modal, A_BOLD);
 

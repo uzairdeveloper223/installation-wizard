@@ -59,10 +59,10 @@ void print_dim(WINDOW *window, int y, int x, const char *format, ...)
     va_start(arguments, format);
 
     // Print text with dimmed styling.
-    wattron(window, COLOR_PAIR(3));
+    wattron(window, COLOR_PAIR(UI_COLOR_DIM));
     wmove(window, y, x);
     vw_printw(window, format, arguments);
-    wattroff(window, COLOR_PAIR(3));
+    wattroff(window, COLOR_PAIR(UI_COLOR_DIM));
 
     va_end(arguments);
 }
@@ -74,10 +74,10 @@ void print_warning(WINDOW *window, int y, int x, const char *format, ...)
     va_start(arguments, format);
 
     // Print text with warning styling.
-    wattron(window, A_BOLD | COLOR_PAIR(7));
+    wattron(window, A_BOLD | COLOR_PAIR(UI_COLOR_WARNING));
     wmove(window, y, x);
     vw_printw(window, format, arguments);
-    wattroff(window, A_BOLD | COLOR_PAIR(7));
+    wattroff(window, A_BOLD | COLOR_PAIR(UI_COLOR_WARNING));
 
     va_end(arguments);
 }
@@ -89,10 +89,10 @@ void print_selected(WINDOW *window, int y, int x, const char *format, ...)
     va_start(arguments, format);
 
     // Print text with selected styling.
-    wattron(window, A_BOLD | COLOR_PAIR(6));
+    wattron(window, A_BOLD | COLOR_PAIR(UI_COLOR_SELECTED));
     wmove(window, y, x);
     vw_printw(window, format, arguments);
-    wattroff(window, A_BOLD | COLOR_PAIR(6));
+    wattroff(window, A_BOLD | COLOR_PAIR(UI_COLOR_SELECTED));
 
     va_end(arguments);
 }
@@ -122,7 +122,7 @@ void render_table(
     }
 
     // Render header row.
-    wattron(window, COLOR_PAIR(4));
+    wattron(window, COLOR_PAIR(UI_COLOR_HEADER));
     int column_x = x;
     for (int column_index = 0; column_index < column_count; column_index++)
     {
@@ -140,7 +140,7 @@ void render_table(
     {
         wprintw(window, "%*s", remaining, "");
     }
-    wattroff(window, COLOR_PAIR(4));
+    wattroff(window, COLOR_PAIR(UI_COLOR_HEADER));
 
     // Calculate the number of visible rows.
     int visible_count = (row_count < max_visible) ? row_count : max_visible;
@@ -153,7 +153,7 @@ void render_table(
     for (int visible_index = 0; visible_index < visible_count; visible_index++)
     {
         int row_index = scroll_offset + visible_index;
-        int row_color = (row_index % 2 == 0) ? 2 : 5;
+        int row_color = (row_index % 2 == 0) ? UI_COLOR_ROW_ODD : UI_COLOR_ROW_EVEN;
         int is_selected_row = (row_index == selected);
 
         // Apply row styling: reverse for selected, alternating colors otherwise.
@@ -253,7 +253,7 @@ void render_form(
         }
         if (fields[field_index].readonly)
         {
-            wattron(window, COLOR_PAIR(3));
+            wattron(window, COLOR_PAIR(UI_COLOR_DIM));
         }
 
         // Render value with arrows for navigable fields.
@@ -273,7 +273,7 @@ void render_form(
         // Disable field styling after rendering.
         if (fields[field_index].readonly)
         {
-            wattroff(window, COLOR_PAIR(3));
+            wattroff(window, COLOR_PAIR(UI_COLOR_DIM));
         }
         if (is_focused && !fields[field_index].readonly)
         {

@@ -83,9 +83,9 @@ void render_footer(WINDOW *modal, const char **items)
                     cursor = end + 1;
                 } else {
                     // No closing bracket, render rest in gray.
-                    wattron(modal, COLOR_PAIR(3));
+                    wattron(modal, COLOR_PAIR(UI_COLOR_DIM));
                     mvwprintw(modal, MODAL_HEIGHT - 2, x, "%s", cursor);
-                    wattroff(modal, COLOR_PAIR(3));
+                    wattroff(modal, COLOR_PAIR(UI_COLOR_DIM));
                     x += strlen(cursor);
                     break;
                 }
@@ -93,9 +93,9 @@ void render_footer(WINDOW *modal, const char **items)
                 // Find next '[' or end of string, render in gray.
                 const char *next = strchr(cursor, '[');
                 int length = next ? (next - cursor) : (int)strlen(cursor);
-                wattron(modal, COLOR_PAIR(3));
+                wattron(modal, COLOR_PAIR(UI_COLOR_DIM));
                 mvwprintw(modal, MODAL_HEIGHT - 2, x, "%.*s", length, cursor);
-                wattroff(modal, COLOR_PAIR(3));
+                wattroff(modal, COLOR_PAIR(UI_COLOR_DIM));
                 x += length;
                 cursor += length;
             }
