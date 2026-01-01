@@ -304,105 +304,40 @@ static int run_partition_form(
     }
 }
 
-static int add_partition_dialog(
-    WINDOW *modal, Store *store, unsigned long long disk_size
+/**
+ * Displays a partition selection dialog.
+ *
+ * @param modal     The modal window.
+ * @param store     The global store.
+ * @param disk_size The total disk size in bytes.
+ * @param title     The dialog title.
+ *
+ * @return Selected partition index (0-based), or -1 if cancelled.
+ */
+static int select_partition(
+    WINDOW *modal, Store *store, unsigned long long disk_size, const char *title
 )
 {
-    // Check if maximum partition count has been reached.
-    if (store->partition_count >= STORE_MAX_PARTITIONS)
-    {
-        return 0;
-    }
-
-    // Calculate available free space on disk.
-    unsigned long long free_space = disk_size - sum_partition_sizes(
-        store->partitions, store->partition_count
-    );
-    char free_str[32];
-    format_disk_size(free_space, free_str, sizeof(free_str));
-
-    // Initialize form field indices with defaults.
-    int size_idx = 6;      // Default to 4G.
-    int mount_idx = 0;     // Default to /.
-    int flag_idx = 0;      // Default to none.
-
-    // Run the partition form.
-    if (!run_partition_form(modal, "Add Partition", free_str,
-                            &size_idx, &mount_idx, &flag_idx, "Add"))
-    {
-        return 0;
-    }
-
-    // Create new partition from form values.
-    Partition new_part = {0};
-
-    // Set partition size, using remaining space for "Rest".
-    if (size_presets[size_idx] == 0)
-    {
-        new_part.size_bytes = free_space;
-    }
-    else
-    {
-        new_part.size_bytes = size_presets[size_idx];
-    }
-
-    // Clamp size to available free space.
-    if (new_part.size_bytes > free_space)
-    {
-        new_part.size_bytes = free_space;
-    }
-
-    // Set mount point and filesystem based on selection.
-    if (mount_idx == 4)
-    {
-        snprintf(new_part.mount_point, sizeof(new_part.mount_point), "[swap]");
-        new_part.filesystem = FS_SWAP;
-    }
-    else
-    {
-        snprintf(new_part.mount_point, sizeof(new_part.mount_point), "%s",
-                 mount_options[mount_idx]);
-        new_part.filesystem = FS_EXT4;
-    }
-
-    // Set partition type and flags.
-    new_part.type = PART_PRIMARY;
-    new_part.flag_boot = (flag_idx == 1) ? 1 : 0;
-    new_part.flag_esp = (flag_idx == 2) ? 1 : 0;
-
-    // Add partition to store and return success.
-    store->partitions[store->partition_count++] = new_part;
-    return 1;
-}
-
-static int edit_partition_dialog(
-    WINDOW *modal, Store *store, unsigned long long disk_size
-)
-{
-    // Return early if there are no partitions to edit.
-    if (store->partition_count == 0)
-    {
-        return 0;
-    }
-
     int selected = 0;
     int scroll_offset = 0;
 
-    // Partition selection loop.
+    // Loop indefinitely until user makes a selection or cancels.
     while (1)
     {
         // Clear modal and render selection header.
         clear_modal(modal);
         wattron(modal, A_BOLD);
-        mvwprintw(modal, 2, 3, "Edit Partition - Select");
+        mvwprintw(modal, 2, 3, "%s", title);
         wattroff(modal, A_BOLD);
 
         // Render partition table with selection highlighting.
-        render_partition_table(modal, store, disk_size, selected, 1,
-                               scroll_offset);
+        render_partition_table(
+            modal, store, disk_size, selected, 1, scroll_offset
+        );
 
         // Render footer and refresh display.
-        const char *footer[] = {
+        const char *footer[] = 
+        {
             "[Up][Down] Navigate", "[Enter] Select", "[Esc] Cancel", NULL
         };
         render_footer(modal, footer);
@@ -430,14 +365,109 @@ static int edit_partition_dialog(
         }
         else if (key == '\n')
         {
-            // Proceed to edit selected partition.
-            break;
+            // Return selected partition index.
+            return selected;
         }
         else if (key == 27)
         {
             // User cancelled selection.
-            return 0;
+            return -1;
         }
+    }
+}
+
+static int add_partition_dialog(
+    WINDOW *modal, Store *store, unsigned long long disk_size
+)
+{
+    // Check if maximum partition count has been reached.
+    if (store->partition_count >= STORE_MAX_PARTITIONS)
+    {
+        return 0;
+    }
+
+    // Calculate available free space on disk.
+    unsigned long long free_space = disk_size - sum_partition_sizes(
+        store->partitions, store->partition_count
+    );
+    char free_str[32];
+    format_disk_size(free_space, free_str, sizeof(free_str));
+
+    // Initialize form field indices with defaults.
+    int size_idx = 6;      // Default to 4G.
+    int mount_idx = 0;     // Default to /.
+    int flag_idx = 0;      // Default to none.
+
+    // Run the partition form.
+    if (!run_partition_form(
+        modal, "Add Partition", free_str, &size_idx,
+        &mount_idx, &flag_idx, "Add"
+    ))
+    {
+        return 0;
+    }
+
+    Partition new_partition = {0};
+
+    // Set partition size, using remaining space for "Rest".
+    if (size_presets[size_idx] == 0)
+    {
+        new_partition.size_bytes = free_space;
+    }
+    else
+    {
+        new_partition.size_bytes = size_presets[size_idx];
+    }
+
+    // Clamp size to available free space.
+    if (new_partition.size_bytes > free_space)
+    {
+        new_partition.size_bytes = free_space;
+    }
+
+    // Set mount point and filesystem based on selection.
+    if (mount_idx == 4)
+    {
+        snprintf(new_partition.mount_point, sizeof(new_partition.mount_point), "[swap]");
+        new_partition.filesystem = FS_SWAP;
+    }
+    else
+    {
+        snprintf(
+            new_partition.mount_point, sizeof(new_partition.mount_point),
+            "%s",
+            mount_options[mount_idx]
+        );
+        new_partition.filesystem = FS_EXT4;
+    }
+
+    // Set partition type and flags.
+    new_partition.type = PART_PRIMARY;
+    new_partition.flag_boot = (flag_idx == 1);
+    new_partition.flag_esp = (flag_idx == 2);
+
+    // Add partition to store and return success.
+    store->partitions[store->partition_count++] = new_partition;
+    return 1;
+}
+
+static int edit_partition_dialog(
+    WINDOW *modal, Store *store, unsigned long long disk_size
+)
+{
+    // Return early if there are no partitions to edit.
+    if (store->partition_count == 0)
+    {
+        return 0;
+    }
+
+    // Let user select which partition to edit.
+    int selected = select_partition(
+        modal, store, disk_size, "Edit Partition - Select"
+    );
+    if (selected < 0)
+    {
+        return 0;
     }
 
     // Get pointer to selected partition.
@@ -461,8 +491,9 @@ static int edit_partition_dialog(
     snprintf(title, sizeof(title), "Edit Partition %d", selected + 1);
 
     // Run the partition form.
-    if (!run_partition_form(modal, title, free_str,
-                            &size_idx, &mount_idx, &flag_idx, "Save"))
+    if (!run_partition_form(
+        modal, title, free_str, &size_idx, &mount_idx, &flag_idx, "Save"
+    ))
     {
         return 0;
     }
@@ -497,8 +528,8 @@ static int edit_partition_dialog(
     }
 
     // Update partition flags.
-    p->flag_boot = (flag_idx == 1) ? 1 : 0;
-    p->flag_esp = (flag_idx == 2) ? 1 : 0;
+    p->flag_boot = (flag_idx == 1);
+    p->flag_esp = (flag_idx == 2);
     return 1;
 }
 
@@ -512,59 +543,13 @@ static int remove_partition_dialog(
         return 0;
     }
 
-    int selected = 0;
-    int scroll_offset = 0;
-
-    // Partition selection loop.
-    while (1)
+    // Let user select which partition to remove.
+    int selected = select_partition(
+        modal, store, disk_size, "Remove Partition - Select"
+    );
+    if (selected < 0)
     {
-        // Clear modal and render selection header.
-        clear_modal(modal);
-        wattron(modal, A_BOLD);
-        mvwprintw(modal, 2, 3, "Remove Partition - Select");
-        wattroff(modal, A_BOLD);
-
-        // Render partition table with selection highlighting.
-        render_partition_table(modal, store, disk_size, selected, 1,
-                               scroll_offset);
-
-        // Render footer and refresh display.
-        const char *footer[] = {
-            "[Up][Down] Navigate", "[Enter] Select", "[Esc] Cancel", NULL
-        };
-        render_footer(modal, footer);
-        wrefresh(modal);
-
-        // Handle user input for partition selection.
-        int key = wgetch(modal);
-        if (key == KEY_UP && selected > 0)
-        {
-            // Move selection up.
-            selected--;
-            if (selected < scroll_offset)
-            {
-                scroll_offset = selected;
-            }
-        }
-        else if (key == KEY_DOWN && selected < store->partition_count - 1)
-        {
-            // Move selection down.
-            selected++;
-            if (selected >= scroll_offset + MAX_VISIBLE_PARTITIONS)
-            {
-                scroll_offset = selected - MAX_VISIBLE_PARTITIONS + 1;
-            }
-        }
-        else if (key == '\n')
-        {
-            // Proceed to remove selected partition.
-            break;
-        }
-        else if (key == 27)
-        {
-            // User cancelled selection.
-            return 0;
-        }
+        return 0;
     }
 
     // Remove partition by shifting remaining partitions down.
@@ -600,13 +585,22 @@ int run_partition_step(WINDOW *modal)
         // Adjust scroll offset if partitions were removed.
         if (scroll_offset > 0 && scroll_offset >= store->partition_count)
         {
-            scroll_offset = store->partition_count > 0
-                ? store->partition_count - 1 : 0;
+            if (store->partition_count > 0)
+            {
+                scroll_offset = store->partition_count - 1;
+            }
+            else
+            {
+                scroll_offset = 0;
+            }
         }
 
         // Calculate maximum scroll offset.
-        int max_scroll = store->partition_count > MAX_VISIBLE_PARTITIONS
-            ? store->partition_count - MAX_VISIBLE_PARTITIONS : 0;
+        int max_scroll = 0;
+        if (store->partition_count > MAX_VISIBLE_PARTITIONS)
+        {
+            max_scroll = store->partition_count - MAX_VISIBLE_PARTITIONS;
+        }
         if (scroll_offset > max_scroll)
         {
             scroll_offset = max_scroll;
