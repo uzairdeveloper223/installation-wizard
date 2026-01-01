@@ -5,27 +5,6 @@
 
 #include "../all.h"
 
-static int is_removable(const char *device)
-{
-    char path[256];
-    snprintf(path, sizeof(path), "/sys/block/%s/removable", device);
-
-    FILE *file = fopen(path, "r");
-    if (file == NULL)
-    {
-        return 0;
-    }
-
-    int removable = 0;
-    if (fscanf(file, "%d", &removable) != 1)
-    {
-        removable = 0;
-    }
-    fclose(file);
-
-    return removable;
-}
-
 int populate_disk_options(StepOption *out_options, int max_count)
 {
     // Open `/sys/block` to read block devices.
@@ -69,7 +48,7 @@ int populate_disk_options(StepOption *out_options, int max_count)
         format_disk_size(size, size_str, sizeof(size_str));
 
         // Mark removable disks in the label.
-        const char *removable_tag = is_removable(name) ? " [Removable]" : "";
+        const char *removable_tag = is_disk_removable(name) ? " [Removable]" : "";
 
         // Populate option entry.
         snprintf(out_options[count].value, sizeof(out_options[count].value), "/dev/%s", name);

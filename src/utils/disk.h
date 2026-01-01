@@ -45,3 +45,16 @@ int is_disk_removable(const char *device);
 unsigned long long sum_partition_sizes(
     const struct Partition *partitions, int count
 );
+
+/**
+ * Constructs a partition device path from a disk path and partition number.
+ * Handles NVMe and MMC device naming conventions (e.g., /dev/nvme0n1p1).
+ *
+ * @param disk        The disk device path (e.g., "/dev/sda" or "/dev/nvme0n1").
+ * @param part_num    The partition number (1-indexed).
+ * @param out_buffer  Buffer to store the partition path.
+ * @param buffer_size Size of the output buffer.
+ */
+void get_partition_device(
+    const char *disk, int part_num, char *out_buffer, size_t buffer_size
+);

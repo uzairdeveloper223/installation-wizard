@@ -81,27 +81,19 @@ static int create_partitions(const char *disk, Store *store)
     // Format each partition with appropriate filesystem.
     for (int i = 0; i < store->partition_count; i++)
     {
+        // Get partition device.
         Partition *p = &store->partitions[i];
-        char part_dev[128];
-
-        // Handle partition naming (e.g., /dev/sda1 vs /dev/nvme0n1p1).
-        if (strstr(disk, "nvme") || strstr(disk, "mmcblk"))
-        {
-            snprintf(part_dev, sizeof(part_dev), "%sp%d", disk, i + 1);
-        }
-        else
-        {
-            snprintf(part_dev, sizeof(part_dev), "%s%d", disk, i + 1);
-        }
+        char partition_device[128];
+        get_partition_device(disk, i + 1, partition_device, sizeof(partition_device));
 
         // Build format command based on filesystem type.
         if (p->filesystem == FS_EXT4)
         {
-            snprintf(cmd, sizeof(cmd), "mkfs.ext4 -F %s 2>/dev/null", part_dev);
+            snprintf(cmd, sizeof(cmd), "mkfs.ext4 -F %s 2>/dev/null", partition_device);
         }
         else if (p->filesystem == FS_SWAP)
         {
-            snprintf(cmd, sizeof(cmd), "mkswap %s 2>/dev/null", part_dev);
+            snprintf(cmd, sizeof(cmd), "mkswap %s 2>/dev/null", partition_device);
         }
 
         // Execute format command.
@@ -117,16 +109,9 @@ static int create_partitions(const char *disk, Store *store)
         Partition *p = &store->partitions[i];
         if (strcmp(p->mount_point, "/") == 0)
         {
-            char part_dev[128];
-            if (strstr(disk, "nvme") || strstr(disk, "mmcblk"))
-            {
-                snprintf(part_dev, sizeof(part_dev), "%sp%d", disk, i + 1);
-            }
-            else
-            {
-                snprintf(part_dev, sizeof(part_dev), "%s%d", disk, i + 1);
-            }
-            snprintf(cmd, sizeof(cmd), "mount %s /mnt 2>/dev/null", part_dev);
+            char partition_device[128];
+            get_partition_device(disk, i + 1, partition_device, sizeof(partition_device));
+            snprintf(cmd, sizeof(cmd), "mount %s /mnt 2>/dev/null", partition_device);
             if (run_command(cmd) != 0)
             {
                 return 1;
@@ -142,36 +127,22 @@ static int create_partitions(const char *disk, Store *store)
         if (p->filesystem == FS_SWAP)
         {
             // Enable swap partition.
-            char part_dev[128];
-            if (strstr(disk, "nvme") || strstr(disk, "mmcblk"))
-            {
-                snprintf(part_dev, sizeof(part_dev), "%sp%d", disk, i + 1);
-            }
-            else
-            {
-                snprintf(part_dev, sizeof(part_dev), "%s%d", disk, i + 1);
-            }
-            snprintf(cmd, sizeof(cmd), "swapon %s 2>/dev/null", part_dev);
+            char partition_device[128];
+            get_partition_device(disk, i + 1, partition_device, sizeof(partition_device));
+            snprintf(cmd, sizeof(cmd), "swapon %s 2>/dev/null", partition_device);
             run_command(cmd);
         }
         else if (strcmp(p->mount_point, "/") != 0 && p->mount_point[0] == '/')
         {
             // Mount non-root partition.
-            char part_dev[128];
+            char partition_device[128];
             char mount_path[256];
-            if (strstr(disk, "nvme") || strstr(disk, "mmcblk"))
-            {
-                snprintf(part_dev, sizeof(part_dev), "%sp%d", disk, i + 1);
-            }
-            else
-            {
-                snprintf(part_dev, sizeof(part_dev), "%s%d", disk, i + 1);
-            }
+            get_partition_device(disk, i + 1, partition_device, sizeof(partition_device));
             snprintf(mount_path, sizeof(mount_path), "/mnt%s", p->mount_point);
             snprintf(
                 cmd, sizeof(cmd),
                 "mkdir -p %s && mount %s %s 2>/dev/null",
-                mount_path, part_dev, mount_path
+                mount_path, partition_device, mount_path
             );
             run_command(cmd);
         }
