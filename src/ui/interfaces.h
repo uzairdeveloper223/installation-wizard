@@ -84,17 +84,6 @@ void print_bold(WINDOW *window, int y, int x, const char *format, ...);
 void print_dim(WINDOW *window, int y, int x, const char *format, ...);
 
 /**
- * Prints warning (orange) text at the specified position. Uses color pair 7
- * with bold.
- *
- * @param window The ncurses window to draw in.
- * @param y Y coordinate.
- * @param x X coordinate.
- * @param format Format string.
- */
-void print_warning(WINDOW *window, int y, int x, const char *format, ...);
-
-/**
  * Prints text with the selected indicator style (bold dodger blue). Uses
  * color pair 6 with bold.
  *
@@ -154,3 +143,51 @@ void render_form(
 FormResult handle_form_key(
     int key, FormField *fields, int field_count, int *out_focused
 );
+
+/**
+ * Renders a styled note box with accent line and background (gray).
+ *
+ * @param window The ncurses window to draw in.
+ * @param y Top Y coordinate.
+ * @param x Left edge X coordinate.
+ * @param text The note text (can contain newlines for multi-line).
+ */
+void render_note(WINDOW *window, int y, int x, const char *text);
+
+/**
+ * Renders a styled info box with accent line and background (blue).
+ *
+ * @param window The ncurses window to draw in.
+ * @param y Top Y coordinate.
+ * @param x Left edge X coordinate.
+ * @param text The info text (can contain newlines for multi-line).
+ */
+void render_info(WINDOW *window, int y, int x, const char *text);
+
+/**
+ * Renders a styled warning box with accent line and background (orange).
+ *
+ * @param window The ncurses window to draw in.
+ * @param y Top Y coordinate.
+ * @param x Left edge X coordinate.
+ * @param text The warning text (can contain newlines for multi-line).
+ */
+void render_warning(WINDOW *window, int y, int x, const char *text);
+
+/**
+ * Renders a styled error box with accent line and background (red).
+ *
+ * @param window The ncurses window to draw in.
+ * @param y Top Y coordinate.
+ * @param x Left edge X coordinate.
+ * @param text The error text (can contain newlines for multi-line).
+ */
+void render_error(WINDOW *window, int y, int x, const char *text);
+
+/**
+ * Renders footer items with darker background, separated by spaces.
+ *
+ * @param modal The modal window to render the footer in.
+ * @param items NULL-terminated array of strings.
+ */
+void render_footer(WINDOW *modal, const char **items);

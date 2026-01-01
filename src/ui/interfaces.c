@@ -59,25 +59,10 @@ void print_dim(WINDOW *window, int y, int x, const char *format, ...)
     va_start(arguments, format);
 
     // Print text with dimmed styling.
-    wattron(window, COLOR_PAIR(UI_COLOR_DIM));
+    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM));
     wmove(window, y, x);
     vw_printw(window, format, arguments);
-    wattroff(window, COLOR_PAIR(UI_COLOR_DIM));
-
-    va_end(arguments);
-}
-
-void print_warning(WINDOW *window, int y, int x, const char *format, ...)
-{
-    // Initialize variadic arguments.
-    va_list arguments;
-    va_start(arguments, format);
-
-    // Print text with warning styling.
-    wattron(window, A_BOLD | COLOR_PAIR(UI_COLOR_WARNING));
-    wmove(window, y, x);
-    vw_printw(window, format, arguments);
-    wattroff(window, A_BOLD | COLOR_PAIR(UI_COLOR_WARNING));
+    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM));
 
     va_end(arguments);
 }
@@ -89,10 +74,10 @@ void print_selected(WINDOW *window, int y, int x, const char *format, ...)
     va_start(arguments, format);
 
     // Print text with selected styling.
-    wattron(window, A_BOLD | COLOR_PAIR(UI_COLOR_SELECTED));
+    wattron(window, A_BOLD | COLOR_PAIR(CUSTOM_COLOR_PAIR_SELECTED));
     wmove(window, y, x);
     vw_printw(window, format, arguments);
-    wattroff(window, A_BOLD | COLOR_PAIR(UI_COLOR_SELECTED));
+    wattroff(window, A_BOLD | COLOR_PAIR(CUSTOM_COLOR_PAIR_SELECTED));
 
     va_end(arguments);
 }
@@ -122,7 +107,7 @@ void render_table(
     }
 
     // Render header row.
-    wattron(window, COLOR_PAIR(UI_COLOR_HEADER));
+    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_HEADER));
     int column_x = x;
     for (int column_index = 0; column_index < column_count; column_index++)
     {
@@ -140,7 +125,7 @@ void render_table(
     {
         wprintw(window, "%*s", remaining, "");
     }
-    wattroff(window, COLOR_PAIR(UI_COLOR_HEADER));
+    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_HEADER));
 
     // Calculate the number of visible rows.
     int visible_count = (row_count < max_visible) ? row_count : max_visible;
@@ -153,7 +138,7 @@ void render_table(
     for (int visible_index = 0; visible_index < visible_count; visible_index++)
     {
         int row_index = scroll_offset + visible_index;
-        int row_color = (row_index % 2 == 0) ? UI_COLOR_ROW_ODD : UI_COLOR_ROW_EVEN;
+        int row_color = (row_index % 2 == 0) ? CUSTOM_COLOR_PAIR_ROW_ODD : CUSTOM_COLOR_PAIR_ROW_EVEN;
         int is_selected_row = (row_index == selected);
 
         // Apply row styling: reverse for selected, alternating colors otherwise.
@@ -231,15 +216,178 @@ void render_table(
     }
 }
 
+void render_note(WINDOW *window, int y, int x, const char *text)
+{
+    int color = CUSTOM_COLOR_PAIR_NOTE_TEXT;
+
+    // Fill background area with slightly darker color.
+    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
+    for (int row = 0; row < 2; row++)
+    {
+        mvwprintw(window, y + row, x + 1, "%*s", MODAL_WIDTH - 8, "");
+    }
+    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
+
+    // Draw accent line on the left.
+    wattron(window, COLOR_PAIR(color) | A_REVERSE);
+    for (int row = 0; row < 2; row++)
+    {
+        mvwaddch(window, y + row, x, ' ');
+    }
+    wattroff(window, COLOR_PAIR(color) | A_REVERSE);
+
+    // Render text on top of background.
+    const char *line_start = text;
+    int line_num = 0;
+    int text_x = x + 2;
+
+    while (*line_start)
+    {
+        const char *line_end = strchr(line_start, '\n');
+        wattron(window, COLOR_PAIR(color));
+        if (line_end)
+        {
+            int len = line_end - line_start;
+            mvwprintw(window, y + line_num, text_x, "%.*s", len, line_start);
+            line_start = line_end + 1;
+        }
+        else
+        {
+            mvwprintw(window, y + line_num, text_x, "%s", line_start);
+            wattroff(window, COLOR_PAIR(color));
+            break;
+        }
+        wattroff(window, COLOR_PAIR(color));
+        line_num++;
+    }
+}
+
+void render_info(WINDOW *window, int y, int x, const char *text)
+{
+    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
+    for (int row = 0; row < 2; row++)
+        mvwprintw(window, y + row, x + 1, "%*s", MODAL_WIDTH - 8, "");
+    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
+
+    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_INFO_NOTE) | A_REVERSE);
+    for (int row = 0; row < 2; row++)
+        mvwaddch(window, y + row, x, ' ');
+    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_INFO_NOTE) | A_REVERSE);
+
+    const char *line_start = text;
+    int line_num = 0;
+    int text_x = x + 2;
+
+    while (*line_start)
+    {
+        const char *line_end = strchr(line_start, '\n');
+        wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+        if (line_end)
+        {
+            int len = line_end - line_start;
+            mvwprintw(window, y + line_num, text_x, "%.*s", len, line_start);
+            line_start = line_end + 1;
+        }
+        else
+        {
+            mvwprintw(window, y + line_num, text_x, "%s", line_start);
+            wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+            break;
+        }
+        wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+        line_num++;
+    }
+}
+
+void render_warning(WINDOW *window, int y, int x, const char *text)
+{
+    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
+    for (int row = 0; row < 2; row++)
+        mvwprintw(window, y + row, x + 1, "%*s", MODAL_WIDTH - 8, "");
+    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
+
+    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_WARNING_NOTE) | A_REVERSE);
+    for (int row = 0; row < 2; row++)
+        mvwaddch(window, y + row, x, ' ');
+    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_WARNING_NOTE) | A_REVERSE);
+
+    const char *line_start = text;
+    int line_num = 0;
+    int text_x = x + 2;
+
+    while (*line_start)
+    {
+        const char *line_end = strchr(line_start, '\n');
+        wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+        if (line_end)
+        {
+            int len = line_end - line_start;
+            mvwprintw(window, y + line_num, text_x, "%.*s", len, line_start);
+            line_start = line_end + 1;
+        }
+        else
+        {
+            mvwprintw(window, y + line_num, text_x, "%s", line_start);
+            wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+            break;
+        }
+        wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+        line_num++;
+    }
+}
+
+void render_error(WINDOW *window, int y, int x, const char *text)
+{
+    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
+    for (int row = 0; row < 2; row++)
+        mvwprintw(window, y + row, x + 1, "%*s", MODAL_WIDTH - 8, "");
+    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
+
+    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_ERROR_NOTE) | A_REVERSE);
+    for (int row = 0; row < 2; row++)
+        mvwaddch(window, y + row, x, ' ');
+    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_ERROR_NOTE) | A_REVERSE);
+
+    const char *line_start = text;
+    int line_num = 0;
+    int text_x = x + 2;
+
+    while (*line_start)
+    {
+        const char *line_end = strchr(line_start, '\n');
+        wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+        if (line_end)
+        {
+            int len = line_end - line_start;
+            mvwprintw(window, y + line_num, text_x, "%.*s", len, line_start);
+            line_start = line_end + 1;
+        }
+        else
+        {
+            mvwprintw(window, y + line_num, text_x, "%s", line_start);
+            wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+            break;
+        }
+        wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+        line_num++;
+    }
+}
+
 void render_form(
     WINDOW *window, int y, int x, int label_width,
     FormField *fields, int field_count, int focused
 )
 {
-    // Render each field.
+    // Render each field, with description below focused field.
     for (int field_index = 0; field_index < field_count; field_index++)
     {
+        // Calculate row position, accounting for description below focused.
         int row_y = y + field_index;
+        if (field_index > focused)
+        {
+            row_y += 4; // Shift down for 2-line note + gap above + gap below.
+        }
+
         int is_focused = (field_index == focused);
 
         // Render label.
@@ -253,7 +401,7 @@ void render_form(
         }
         if (fields[field_index].readonly)
         {
-            wattron(window, COLOR_PAIR(UI_COLOR_DIM));
+            wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM));
         }
 
         // Render value with arrows for navigable fields.
@@ -273,38 +421,17 @@ void render_form(
         // Disable field styling after rendering.
         if (fields[field_index].readonly)
         {
-            wattroff(window, COLOR_PAIR(UI_COLOR_DIM));
+            wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM));
         }
         if (is_focused && !fields[field_index].readonly)
         {
             wattroff(window, A_REVERSE);
         }
-    }
 
-    // Render description for focused field below all fields.
-    if (focused >= 0 && focused < field_count &&
-        fields[focused].description != NULL)
-    {
-        int desc_y = y + field_count + 1;
-        const char *desc = fields[focused].description;
-        const char *line_start = desc;
-        int line_num = 0;
-
-        while (*line_start)
+        // Render description below focused field (with gap above).
+        if (is_focused && fields[focused].description != NULL)
         {
-            const char *line_end = strchr(line_start, '\n');
-            if (line_end)
-            {
-                int len = line_end - line_start;
-                print_dim(window, desc_y + line_num, x, "%.*s", len, line_start);
-                line_start = line_end + 1;
-            }
-            else
-            {
-                print_dim(window, desc_y + line_num, x, "%s", line_start);
-                break;
-            }
-            line_num++;
+            render_info(window, row_y + 2, x, fields[focused].description);
         }
     }
 }
@@ -364,4 +491,55 @@ FormResult handle_form_key(
     }
 
     return FORM_CONTINUE;
+}
+
+void render_footer(WINDOW *modal, const char **items)
+{
+    int x = 3;
+    for (int item_index = 0; items[item_index] != NULL; item_index++)
+    {
+        if (item_index > 0)
+        {
+            x += 2; // 2 space gap between items.
+        }
+
+        const char *cursor = items[item_index];
+        while (*cursor)
+        {
+            if (*cursor == '[')
+            {
+                // Find closing bracket and render in bold.
+                const char *end = strchr(cursor, ']');
+                if (end != NULL)
+                {
+                    int length = end - cursor + 1;
+                    wattron(modal, A_BOLD);
+                    mvwprintw(modal, MODAL_HEIGHT - 2, x, "%.*s", length, cursor);
+                    wattroff(modal, A_BOLD);
+                    x += length;
+                    cursor = end + 1;
+                }
+                else
+                {
+                    // No closing bracket, render rest in gray.
+                    wattron(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM));
+                    mvwprintw(modal, MODAL_HEIGHT - 2, x, "%s", cursor);
+                    wattroff(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM));
+                    x += strlen(cursor);
+                    break;
+                }
+            }
+            else
+            {
+                // Find next '[' or end of string, render in gray.
+                const char *next = strchr(cursor, '[');
+                int length = next ? (next - cursor) : (int)strlen(cursor);
+                wattron(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM));
+                mvwprintw(modal, MODAL_HEIGHT - 2, x, "%.*s", length, cursor);
+                wattroff(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM));
+                x += length;
+                cursor += length;
+            }
+        }
+    }
 }

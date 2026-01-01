@@ -54,7 +54,7 @@ void render_partition_table(
     }
 
     // Render column headers with darker background.
-    wattron(modal, COLOR_PAIR(UI_COLOR_HEADER));
+    wattron(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_HEADER));
     char header[64];
     snprintf(
         header, sizeof(header),
@@ -62,7 +62,7 @@ void render_partition_table(
         "Size", "Mount", "FS", "Type", "Flags"
     );
     mvwprintw(modal, 6, 3, "%-*s", table_width, header);
-    wattroff(modal, COLOR_PAIR(UI_COLOR_HEADER));
+    wattroff(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_HEADER));
 
     // Render partition rows.
     for (int i = 0; i < MAX_VISIBLE_PARTITIONS; i++)
@@ -70,7 +70,7 @@ void render_partition_table(
         int part_index = scroll_offset + i;
 
         // Apply alternating row background color.
-        int row_color = (part_index % 2 == 0) ? UI_COLOR_ROW_ODD : UI_COLOR_ROW_EVEN;
+        int row_color = (part_index % 2 == 0) ? CUSTOM_COLOR_PAIR_ROW_ODD : CUSTOM_COLOR_PAIR_ROW_EVEN;
         wattron(modal, COLOR_PAIR(row_color));
 
         if (part_index < store->partition_count)

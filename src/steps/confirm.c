@@ -11,7 +11,7 @@ int run_confirmation_step(WINDOW *modal)
 
     // Clear and draw step header.
     clear_modal(modal);
-    wattron(modal, A_BOLD | COLOR_PAIR(UI_COLOR_MAIN));
+    wattron(modal, A_BOLD | COLOR_PAIR(CUSTOM_COLOR_PAIR_MAIN));
     mvwprintw(modal, 2, 3, "Step 4: Confirm Installation");
     wattroff(modal, A_BOLD);
 
@@ -43,7 +43,13 @@ int run_confirmation_step(WINDOW *modal)
     }
 
     // Display warning about disk formatting.
-    print_warning(modal, 10, 3, "WARNING: All data on %s will be erased!", store->disk);
+    char warning_text[128];
+    snprintf(
+        warning_text, sizeof(warning_text),
+        "All data on %s will be erased!\n"
+        "This action cannot be undone.", store->disk
+    );
+    render_warning(modal, 10, 3, warning_text);
 
     // Display navigation footer.
     const char *footer[] = {"[Enter] Install", "[Esc] Back", NULL};

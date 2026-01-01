@@ -16,7 +16,7 @@ WINDOW *create_modal(const char *title)
 
     // Create window with border and background color.
     WINDOW *window = newwin(MODAL_HEIGHT, MODAL_WIDTH, start_y, start_x);
-    wbkgd(window, COLOR_PAIR(UI_COLOR_MAIN));
+    wbkgd(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_MAIN));
     box(window, 0, 0);
 
     // Enable arrow key detection on this window.

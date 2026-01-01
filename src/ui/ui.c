@@ -22,34 +22,29 @@ void init_ui(void)
         start_color();
         use_default_colors();
 
-        // Define off-white background for a softer appearance.
+        // Define custom colors if supported.
         if (can_change_color()) {
-            init_color(COLOR_WHITE, 900, 900, 880);
-            // Define a darker background for table rows (odd).
-            init_color(9, 820, 820, 800);
-            // Define an even darker background for table header.
-            init_color(10, 700, 700, 680);
-            // Define a lighter background for table rows (even).
-            init_color(11, 860, 860, 840);
-            // Define dodger blue for selected indicator.
-            init_color(12, 118, 565, 1000);
-            // Define orange for warning text.
-            init_color(13, 900, 400, 0);
+            init_color(COLOR_WHITE,                900, 900, 880);
+            init_color(CUSTOM_COLOR_ROW_ODD_BG,    820, 820, 800);
+            init_color(CUSTOM_COLOR_HEADER_BG,     700, 700, 680);
+            init_color(CUSTOM_COLOR_ROW_EVEN_BG,   860, 860, 840);
+            init_color(CUSTOM_COLOR_BLUE,          118, 565, 1000);
+            init_color(CUSTOM_COLOR_ORANGE,        900, 400, 0);
+            init_color(CUSTOM_COLOR_RED,           900, 200, 200);
         }
 
-        init_pair(1, COLOR_BLACK, COLOR_WHITE);
-        // Color pair for table rows odd (darker background).
-        init_pair(2, COLOR_BLACK, 9);
-        // Color pair for dimmed/gray text.
-        init_pair(3, 8, COLOR_WHITE); 
-        // Color pair for table header (darker than rows).
-        init_pair(4, COLOR_BLACK, 10);
-        // Color pair for table rows even (lighter background).
-        init_pair(5, COLOR_BLACK, 11);
-        // Color pair for dodger blue selected indicator.
-        init_pair(6, 12, COLOR_WHITE);
-        // Color pair for warning text (orange).
-        init_pair(7, 13, COLOR_WHITE);
+        // Initialize color pairs.
+        init_pair(CUSTOM_COLOR_PAIR_MAIN, COLOR_BLACK, COLOR_WHITE);
+        init_pair(CUSTOM_COLOR_PAIR_ROW_ODD, COLOR_BLACK, CUSTOM_COLOR_ROW_ODD_BG);
+        init_pair(CUSTOM_COLOR_PAIR_DIM, CUSTOM_COLOR_DARK_GRAY, COLOR_WHITE);
+        init_pair(CUSTOM_COLOR_PAIR_HEADER, COLOR_BLACK, CUSTOM_COLOR_HEADER_BG);
+        init_pair(CUSTOM_COLOR_PAIR_ROW_EVEN, COLOR_BLACK, CUSTOM_COLOR_ROW_EVEN_BG);
+        init_pair(CUSTOM_COLOR_PAIR_SELECTED, CUSTOM_COLOR_BLUE, COLOR_WHITE);
+        init_pair(CUSTOM_COLOR_PAIR_NOTE_BG, COLOR_BLACK, CUSTOM_COLOR_ROW_EVEN_BG);
+        init_pair(CUSTOM_COLOR_PAIR_NOTE_TEXT, COLOR_BLACK, CUSTOM_COLOR_ROW_EVEN_BG);
+        init_pair(CUSTOM_COLOR_PAIR_INFO_NOTE, CUSTOM_COLOR_BLUE, CUSTOM_COLOR_ROW_EVEN_BG);
+        init_pair(CUSTOM_COLOR_PAIR_WARNING_NOTE, CUSTOM_COLOR_ORANGE, CUSTOM_COLOR_ROW_EVEN_BG);
+        init_pair(CUSTOM_COLOR_PAIR_ERROR_NOTE, CUSTOM_COLOR_RED, CUSTOM_COLOR_ROW_EVEN_BG);
     }
 
     // Refresh to apply initial screen state.
@@ -59,46 +54,4 @@ void init_ui(void)
 void cleanup_ui(void)
 {
     endwin();
-}
-
-void render_footer(WINDOW *modal, const char **items)
-{
-    int x = 3;
-    for (int item_index = 0; items[item_index] != NULL; item_index++) {
-        if (item_index > 0) {
-            x += 2; // 2 space gap between items.
-        }
-
-        const char *cursor = items[item_index];
-        while (*cursor) {
-            if (*cursor == '[') {
-                // Find closing bracket and render in bold.
-                const char *end = strchr(cursor, ']');
-                if (end != NULL) {
-                    int length = end - cursor + 1;
-                    wattron(modal, A_BOLD);
-                    mvwprintw(modal, MODAL_HEIGHT - 2, x, "%.*s", length, cursor);
-                    wattroff(modal, A_BOLD);
-                    x += length;
-                    cursor = end + 1;
-                } else {
-                    // No closing bracket, render rest in gray.
-                    wattron(modal, COLOR_PAIR(UI_COLOR_DIM));
-                    mvwprintw(modal, MODAL_HEIGHT - 2, x, "%s", cursor);
-                    wattroff(modal, COLOR_PAIR(UI_COLOR_DIM));
-                    x += strlen(cursor);
-                    break;
-                }
-            } else {
-                // Find next '[' or end of string, render in gray.
-                const char *next = strchr(cursor, '[');
-                int length = next ? (next - cursor) : (int)strlen(cursor);
-                wattron(modal, COLOR_PAIR(UI_COLOR_DIM));
-                mvwprintw(modal, MODAL_HEIGHT - 2, x, "%.*s", length, cursor);
-                wattroff(modal, COLOR_PAIR(UI_COLOR_DIM));
-                x += length;
-                cursor += length;
-            }
-        }
-    }
 }

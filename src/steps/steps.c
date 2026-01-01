@@ -13,7 +13,7 @@ void display_step(WINDOW *modal, int step_number, Step *step)
     clear_modal(modal);
 
     // Display step header in bold with primary color.
-    wattron(modal, A_BOLD | COLOR_PAIR(UI_COLOR_MAIN));
+    wattron(modal, A_BOLD | COLOR_PAIR(CUSTOM_COLOR_PAIR_MAIN));
     mvwprintw(modal, 2, 3, "Step %d: %s", step_number, step->name);
     wattroff(modal, A_BOLD);
 
@@ -89,9 +89,9 @@ void render_step_options(
             }
 
             // Render " *" indicator in bold blue.
-            wattron(modal, COLOR_PAIR(UI_COLOR_SELECTED) | A_BOLD);
+            wattron(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_SELECTED) | A_BOLD);
             wprintw(modal, " *");
-            wattroff(modal, COLOR_PAIR(UI_COLOR_SELECTED) | A_BOLD);
+            wattroff(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_SELECTED) | A_BOLD);
         }
         else
         {
@@ -111,8 +111,10 @@ void render_step_options(
     }
 
     // Draw scrollbar on the right edge.
-    render_scrollbar(modal, start_y, MODAL_SCROLLBAR_X, visible_count,
-                     scroll_offset, max_visible, count);
+    render_scrollbar(
+        modal, start_y, MODAL_SCROLLBAR_X, visible_count, scroll_offset,
+        max_visible, count
+    );
 }
 
 int run_selection_step(
@@ -137,7 +139,7 @@ int run_selection_step(
     {
         // Clear modal and render step header.
         clear_modal(modal);
-        wattron(modal, A_BOLD | COLOR_PAIR(UI_COLOR_MAIN));
+        wattron(modal, A_BOLD | COLOR_PAIR(CUSTOM_COLOR_PAIR_MAIN));
         mvwprintw(modal, 2, 3, "Step %d: %s", step_number, title);
         wattroff(modal, A_BOLD);
 

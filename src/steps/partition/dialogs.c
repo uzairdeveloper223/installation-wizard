@@ -3,14 +3,12 @@
 #define SIZE_COUNT 17
 #define MOUNT_COUNT 5
 #define FLAG_COUNT 3
-#define FS_COUNT 2
 #define TYPE_COUNT 2
 #define FIELD_SIZE   0
 #define FIELD_MOUNT  1
-#define FIELD_FS     2
-#define FIELD_TYPE   3
-#define FIELD_FLAGS  4
-#define FIELD_COUNT  5
+#define FIELD_TYPE   2
+#define FIELD_FLAGS  3
+#define FIELD_COUNT  4
 
 static const unsigned long long size_presets[] =
 {
@@ -41,7 +39,6 @@ static const char *size_labels[] =
 
 static const char *mount_options[] = { "/", "/boot", "/home", "/var", "swap" };
 static const char *flag_options[] = { "none", "boot", "esp" };
-static const char *fs_options[] = { "ext4", "swap" };
 static const char *type_options[] = { "primary", "logical" };
 
 static int find_closest_size_idx(unsigned long long size)
@@ -111,26 +108,20 @@ static int run_partition_form(
     // Main form loop.
     while (1)
     {
-        // Update filesystem index based on mount selection (swap = index 4).
-        int fs_idx = (*mount_idx == 4) ? 1 : 0;
-
         // Set up form fields.
         FormField fields[FIELD_COUNT] = {
             { "Size",       size_labels,   SIZE_COUNT,  *size_idx,  0,
               "The size you want this partition to be.\n"
               "Use 'Rest' to allocate all remaining disk space." },
             { "Mount",      mount_options, MOUNT_COUNT, *mount_idx, 0,
-              "Directory where this partition will be accessible.\n"
-              "At minimum, a root (/) partition is required." },
-            { "Filesystem", fs_options,    FS_COUNT,    fs_idx,     1,
-              "Filesystem format for this partition.\n"
-              "Automatically selected based on the mount point." },
+              "Where this partition will be accessible.\n"
+              "Filesystem (ext4, swap) is automatically chosen." },
             { "Type",       type_options,  TYPE_COUNT,  *type_idx,  0,
               "Partition type. Primary is standard for most uses.\n"
               "Use logical partitions inside extended partitions." },
             { "Flags",      flag_options,  FLAG_COUNT,  *flag_idx,  0,
-              "Special partition flags for bootloader configuration.\n"
-              "Use 'esp' for UEFI boot, 'boot' for legacy BIOS boot." }
+              "Special flags for bootloader configuration.\n"
+              "'esp' for UEFI boot, 'boot' for legacy BIOS." }
         };
 
         // Clear modal and render dialog title.
