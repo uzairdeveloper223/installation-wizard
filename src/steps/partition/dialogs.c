@@ -35,8 +35,8 @@ static const unsigned long long size_presets[] =
 
 static const char *size_labels[] =
 {
-    "64M", "128M", "256M", "512M", "1G", "2G", "4G", "8G",
-    "16G", "32G", "64G", "128G", "256G", "512G", "1T", "2T", "Rest"
+    "64MB", "128MB", "256MB", "512MB", "1GB", "2GB", "4GB", "8GB",
+    "16GB", "32GB", "64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "Rest"
 };
 
 static const char *mount_options[] = { "/", "/boot", "/home", "/var", "swap" };
