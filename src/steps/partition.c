@@ -10,12 +10,14 @@
 #define SIZE_COUNT 17
 #define MOUNT_COUNT 5
 #define FLAG_COUNT 3
+#define FS_COUNT 2
 #define FIELD_SIZE   0
 #define FIELD_MOUNT  1
-#define FIELD_FLAGS  2
-#define FIELD_COUNT  3
+#define FIELD_FS     2
+#define FIELD_FLAGS  3
+#define FIELD_COUNT  4
 
-static const unsigned long long size_presets[] = 
+static const unsigned long long size_presets[] =
 {
     64ULL * 1000000,         // 64M
     128ULL * 1000000,        // 128M
@@ -35,13 +37,14 @@ static const unsigned long long size_presets[] =
     2000ULL * 1000000000,    // 2T
     0                        // "Rest"
 };
-static const char *size_labels[] = 
+static const char *size_labels[] =
 {
     "64M", "128M", "256M", "512M", "1G", "2G", "4G", "8G",
     "16G", "32G", "64G", "128G", "256G", "512G", "1T", "2T", "Rest"
 };
 static const char *mount_options[] = { "/", "/boot", "/home", "/var", "swap" };
 static const char *flag_options[] = { "none", "boot", "esp" };
+static const char *fs_options[] = { "ext4", "swap" };
 
 static const char *fs_to_string(PartitionFS fs)
 {
@@ -82,8 +85,12 @@ static void render_partition_table(
     format_disk_size(free_space, free_str, sizeof(free_str));
 
     // Display header with disk info and free space.
-    mvwprintw(modal, 4, 3, "%s (%s, %s free)", store->disk, disk_size_str,
-              free_str);
+    mvwprintw(
+        modal,
+        4, 3,
+        "%s (%s, %s free)",
+        store->disk, disk_size_str, free_str
+    );
 
     // Calculate the table width, reducing by 1 if scrollbar is needed.
     int table_width = MODAL_WIDTH - 6;
@@ -95,8 +102,11 @@ static void render_partition_table(
     // Render column headers with darker background.
     wattron(modal, COLOR_PAIR(4));
     char header[64];
-    snprintf(header, sizeof(header), " #  %-10s %-8s %-5s %-8s %-6s",
-             "Size", "Mount", "FS", "Type", "Flags");
+    snprintf(
+        header, sizeof(header),
+        " #  %-10s %-8s %-5s %-8s %-6s",
+        "Size", "Mount", "FS", "Type", "Flags"
+    );
     mvwprintw(modal, 6, 3, "%-*s", table_width, header);
     wattroff(modal, COLOR_PAIR(4));
 
@@ -132,10 +142,13 @@ static void render_partition_table(
 
             // Render the partition row.
             char row[64];
-            snprintf(row, sizeof(row), " %-2d %-10s %-8s %-5s %-8s %-6s",
-                     part_index + 1, size_str, mount,
-                     fs_to_string(p->filesystem),
-                     type_to_string(p->type), flags);
+            snprintf(
+                row, sizeof(row),
+                " %-2d %-10s %-8s %-5s %-8s %-6s",
+                part_index + 1, size_str, mount,
+                fs_to_string(p->filesystem),
+                type_to_string(p->type), flags
+            );
             mvwprintw(modal, 7 + i, 3, "%-*s", table_width, row);
 
             // Remove highlight after rendering.
@@ -215,6 +228,82 @@ static int find_flag_idx(int boot, int esp)
     return 0;
 }
 
+/**
+ * Runs the partition form dialog for adding or editing a partition.
+ *
+ * @param modal       The modal window.
+ * @param title       The dialog title.
+ * @param free_str    Free space string to display.
+ * @param size_idx    Pointer to size index (in/out).
+ * @param mount_idx   Pointer to mount index (in/out).
+ * @param flag_idx    Pointer to flag index (in/out).
+ * @param footer_action The action label for footer (e.g., "Add" or "Save").
+ *
+ * @return 1 if user submitted, 0 if cancelled.
+ */
+static int run_partition_form(
+    WINDOW *modal, const char *title, const char *free_str,
+    int *size_idx, int *mount_idx, int *flag_idx,
+    const char *footer_action
+)
+{
+    int focused = FIELD_SIZE;
+
+    // Main form loop.
+    while (1)
+    {
+        // Update filesystem index based on mount selection (swap = index 4).
+        int fs_idx = (*mount_idx == 4) ? 1 : 0;
+
+        // Set up form fields.
+        FormField fields[FIELD_COUNT] = {
+            { "Size",       size_labels,  SIZE_COUNT,  *size_idx,  0 },
+            { "Mount",      mount_options, MOUNT_COUNT, *mount_idx, 0 },
+            { "Filesystem", fs_options,   FS_COUNT,    fs_idx,     1 },
+            { "Flags",      flag_options, FLAG_COUNT,  *flag_idx,  0 }
+        };
+
+        // Clear modal and render dialog title.
+        clear_modal(modal);
+        wattron(modal, A_BOLD);
+        mvwprintw(modal, 2, 3, "%s", title);
+        wattroff(modal, A_BOLD);
+
+        // Display free space indicator.
+        print_dim(modal, 2, 3 + strlen(title) + 1, "(%s free)", free_str);
+
+        // Render the form.
+        render_form(modal, 4, 3, 11, fields, FIELD_COUNT, focused);
+
+        // Render footer and refresh display.
+        char action_str[32];
+        snprintf(action_str, sizeof(action_str), "[Enter] %s", footer_action);
+        const char *footer[] = {
+            "[Arrows] Navigate", action_str, "[Esc] Cancel", NULL
+        };
+        render_footer(modal, footer);
+        wrefresh(modal);
+
+        // Handle user input.
+        int key = wgetch(modal);
+        FormResult result = handle_form_key(key, fields, FIELD_COUNT, &focused);
+
+        // Update indices from form fields after key handling.
+        *size_idx = fields[FIELD_SIZE].current;
+        *mount_idx = fields[FIELD_MOUNT].current;
+        *flag_idx = fields[FIELD_FLAGS].current;
+
+        if (result == FORM_SUBMIT)
+        {
+            return 1;
+        }
+        else if (result == FORM_CANCEL)
+        {
+            return 0;
+        }
+    }
+}
+
 static int add_partition_dialog(
     WINDOW *modal, Store *store, unsigned long long disk_size
 )
@@ -233,158 +322,57 @@ static int add_partition_dialog(
     format_disk_size(free_space, free_str, sizeof(free_str));
 
     // Initialize form field indices with defaults.
-    int focused = FIELD_SIZE;
     int size_idx = 6;      // Default to 4G.
     int mount_idx = 0;     // Default to /.
     int flag_idx = 0;      // Default to none.
 
-    // Main dialog loop.
-    while (1)
+    // Run the partition form.
+    if (!run_partition_form(modal, "Add Partition", free_str,
+                            &size_idx, &mount_idx, &flag_idx, "Add"))
     {
-        // Clear modal and render dialog title.
-        clear_modal(modal);
-        wattron(modal, A_BOLD);
-        mvwprintw(modal, 2, 3, "Add Partition");
-        wattroff(modal, A_BOLD);
-
-        // Display free space indicator.
-        wattron(modal, COLOR_PAIR(3));
-        mvwprintw(modal, 2, 18, "(%s free)", free_str);
-        wattroff(modal, COLOR_PAIR(3));
-
-        // Render size field.
-        int y = 4;
-        mvwprintw(modal, y, 3, "Size");
-        if (focused == FIELD_SIZE) wattron(modal, A_REVERSE);
-        mvwprintw(modal, y, 15, " < %s > ", size_labels[size_idx]);
-        if (focused == FIELD_SIZE) wattroff(modal, A_REVERSE);
-
-        // Render mount point field.
-        y += 2;
-        mvwprintw(modal, y, 3, "Mount");
-        if (focused == FIELD_MOUNT) wattron(modal, A_REVERSE);
-        mvwprintw(modal, y, 15, " < %s > ", mount_options[mount_idx]);
-        if (focused == FIELD_MOUNT) wattroff(modal, A_REVERSE);
-
-        // Render filesystem field (auto-determined, read-only).
-        y += 2;
-        mvwprintw(modal, y, 3, "Filesystem");
-        wattron(modal, COLOR_PAIR(3));
-        const char *fs_name = (mount_idx == 4) ? "swap" : "ext4";
-        mvwprintw(modal, y, 15, "%s", fs_name);
-        wattroff(modal, COLOR_PAIR(3));
-
-        // Render flags field.
-        y += 2;
-        mvwprintw(modal, y, 3, "Flags");
-        if (focused == FIELD_FLAGS) wattron(modal, A_REVERSE);
-        mvwprintw(modal, y, 15, " < %s > ", flag_options[flag_idx]);
-        if (focused == FIELD_FLAGS) wattroff(modal, A_REVERSE);
-
-        // Render footer and refresh display.
-        const char *footer[] = {
-            "[Arrows] Navigate", "[Enter] Add", "[Esc] Cancel", NULL
-        };
-        render_footer(modal, footer);
-        wrefresh(modal);
-
-        // Handle user input.
-        int key = wgetch(modal);
-        switch (key)
-        {
-            case KEY_UP:
-                // Move focus to previous field.
-                if (focused > 0) focused--;
-                break;
-
-            case KEY_DOWN:
-                // Move focus to next field.
-                if (focused < FIELD_COUNT - 1) focused++;
-                break;
-
-            case KEY_LEFT:
-                // Decrease value of focused field.
-                if (focused == FIELD_SIZE && size_idx > 0)
-                {
-                    size_idx--;
-                }
-                else if (focused == FIELD_MOUNT && mount_idx > 0)
-                {
-                    mount_idx--;
-                }
-                else if (focused == FIELD_FLAGS && flag_idx > 0)
-                {
-                    flag_idx--;
-                }
-                break;
-
-            case KEY_RIGHT:
-                // Increase value of focused field.
-                if (focused == FIELD_SIZE && size_idx < SIZE_COUNT - 1)
-                {
-                    size_idx++;
-                }
-                else if (focused == FIELD_MOUNT && mount_idx < MOUNT_COUNT - 1)
-                {
-                    mount_idx++;
-                }
-                else if (focused == FIELD_FLAGS && flag_idx < FLAG_COUNT - 1)
-                {
-                    flag_idx++;
-                }
-                break;
-
-            case '\n':
-            {
-                // Create new partition from form values.
-                Partition new_part = {0};
-
-                // Set partition size, using remaining space for "Rest".
-                if (size_presets[size_idx] == 0)
-                {
-                    new_part.size_bytes = free_space;
-                }
-                else
-                {
-                    new_part.size_bytes = size_presets[size_idx];
-                }
-
-                // Clamp size to available free space.
-                if (new_part.size_bytes > free_space)
-                {
-                    new_part.size_bytes = free_space;
-                }
-
-                // Set mount point and filesystem based on selection.
-                if (mount_idx == 4)
-                {
-                    snprintf(new_part.mount_point,
-                             sizeof(new_part.mount_point), "[swap]");
-                    new_part.filesystem = FS_SWAP;
-                }
-                else
-                {
-                    snprintf(new_part.mount_point,
-                             sizeof(new_part.mount_point), "%s",
-                             mount_options[mount_idx]);
-                    new_part.filesystem = FS_EXT4;
-                }
-
-                // Set partition type and flags.
-                new_part.type = PART_PRIMARY;
-                new_part.flag_boot = (flag_idx == 1) ? 1 : 0;
-                new_part.flag_esp = (flag_idx == 2) ? 1 : 0;
-
-                // Add partition to store and return success.
-                store->partitions[store->partition_count++] = new_part;
-                return 1;
-            }
-
-            case 27:
-                // User cancelled, return without creating partition.
-                return 0;
-        }
+        return 0;
     }
+
+    // Create new partition from form values.
+    Partition new_part = {0};
+
+    // Set partition size, using remaining space for "Rest".
+    if (size_presets[size_idx] == 0)
+    {
+        new_part.size_bytes = free_space;
+    }
+    else
+    {
+        new_part.size_bytes = size_presets[size_idx];
+    }
+
+    // Clamp size to available free space.
+    if (new_part.size_bytes > free_space)
+    {
+        new_part.size_bytes = free_space;
+    }
+
+    // Set mount point and filesystem based on selection.
+    if (mount_idx == 4)
+    {
+        snprintf(new_part.mount_point, sizeof(new_part.mount_point), "[swap]");
+        new_part.filesystem = FS_SWAP;
+    }
+    else
+    {
+        snprintf(new_part.mount_point, sizeof(new_part.mount_point), "%s",
+                 mount_options[mount_idx]);
+        new_part.filesystem = FS_EXT4;
+    }
+
+    // Set partition type and flags.
+    new_part.type = PART_PRIMARY;
+    new_part.flag_boot = (flag_idx == 1) ? 1 : 0;
+    new_part.flag_esp = (flag_idx == 2) ? 1 : 0;
+
+    // Add partition to store and return success.
+    store->partitions[store->partition_count++] = new_part;
+    return 1;
 }
 
 static int edit_partition_dialog(
@@ -464,149 +452,54 @@ static int edit_partition_dialog(
     format_disk_size(free_space, free_str, sizeof(free_str));
 
     // Initialize form fields from current partition values.
-    int focused = FIELD_SIZE;
     int size_idx = find_closest_size_idx(p->size_bytes);
     int mount_idx = find_mount_idx(p->mount_point);
     int flag_idx = find_flag_idx(p->flag_boot, p->flag_esp);
 
-    // Edit form loop.
-    while (1)
+    // Build title with partition number.
+    char title[32];
+    snprintf(title, sizeof(title), "Edit Partition %d", selected + 1);
+
+    // Run the partition form.
+    if (!run_partition_form(modal, title, free_str,
+                            &size_idx, &mount_idx, &flag_idx, "Save"))
     {
-        // Clear modal and render edit header.
-        clear_modal(modal);
-        wattron(modal, A_BOLD);
-        mvwprintw(modal, 2, 3, "Edit Partition %d", selected + 1);
-        wattroff(modal, A_BOLD);
-
-        // Display free space indicator.
-        wattron(modal, COLOR_PAIR(3));
-        mvwprintw(modal, 2, 20, "(%s free)", free_str);
-        wattroff(modal, COLOR_PAIR(3));
-
-        // Render size field.
-        int y = 4;
-        mvwprintw(modal, y, 3, "Size");
-        if (focused == FIELD_SIZE) wattron(modal, A_REVERSE);
-        mvwprintw(modal, y, 15, " < %s > ", size_labels[size_idx]);
-        if (focused == FIELD_SIZE) wattroff(modal, A_REVERSE);
-
-        // Render mount point field.
-        y += 2;
-        mvwprintw(modal, y, 3, "Mount");
-        if (focused == FIELD_MOUNT) wattron(modal, A_REVERSE);
-        mvwprintw(modal, y, 15, " < %s > ", mount_options[mount_idx]);
-        if (focused == FIELD_MOUNT) wattroff(modal, A_REVERSE);
-
-        // Render filesystem field (auto-determined, read-only).
-        y += 2;
-        mvwprintw(modal, y, 3, "Filesystem");
-        wattron(modal, COLOR_PAIR(3));
-        const char *fs_name = (mount_idx == 4) ? "swap" : "ext4";
-        mvwprintw(modal, y, 15, "%s", fs_name);
-        wattroff(modal, COLOR_PAIR(3));
-
-        // Render flags field.
-        y += 2;
-        mvwprintw(modal, y, 3, "Flags");
-        if (focused == FIELD_FLAGS) wattron(modal, A_REVERSE);
-        mvwprintw(modal, y, 15, " < %s > ", flag_options[flag_idx]);
-        if (focused == FIELD_FLAGS) wattroff(modal, A_REVERSE);
-
-        // Render footer and refresh display.
-        const char *footer[] = {
-            "[Arrows] Navigate", "[Enter] Save", "[Esc] Cancel", NULL
-        };
-        render_footer(modal, footer);
-        wrefresh(modal);
-
-        // Handle user input.
-        int key = wgetch(modal);
-        switch (key)
-        {
-            case KEY_UP:
-                // Move focus to previous field.
-                if (focused > 0) focused--;
-                break;
-
-            case KEY_DOWN:
-                // Move focus to next field.
-                if (focused < FIELD_COUNT - 1) focused++;
-                break;
-
-            case KEY_LEFT:
-                // Decrease value of focused field.
-                if (focused == FIELD_SIZE && size_idx > 0)
-                {
-                    size_idx--;
-                }
-                else if (focused == FIELD_MOUNT && mount_idx > 0)
-                {
-                    mount_idx--;
-                }
-                else if (focused == FIELD_FLAGS && flag_idx > 0)
-                {
-                    flag_idx--;
-                }
-                break;
-
-            case KEY_RIGHT:
-                // Increase value of focused field.
-                if (focused == FIELD_SIZE && size_idx < SIZE_COUNT - 1)
-                {
-                    size_idx++;
-                }
-                else if (focused == FIELD_MOUNT && mount_idx < MOUNT_COUNT - 1)
-                {
-                    mount_idx++;
-                }
-                else if (focused == FIELD_FLAGS && flag_idx < FLAG_COUNT - 1)
-                {
-                    flag_idx++;
-                }
-                break;
-
-            case '\n':
-            {
-                // Update partition size from form value.
-                if (size_presets[size_idx] == 0)
-                {
-                    p->size_bytes = free_space;
-                }
-                else
-                {
-                    p->size_bytes = size_presets[size_idx];
-                }
-
-                // Clamp size to available free space.
-                if (p->size_bytes > free_space)
-                {
-                    p->size_bytes = free_space;
-                }
-
-                // Update mount point and filesystem.
-                if (mount_idx == 4)
-                {
-                    snprintf(p->mount_point, sizeof(p->mount_point), "[swap]");
-                    p->filesystem = FS_SWAP;
-                }
-                else
-                {
-                    snprintf(p->mount_point, sizeof(p->mount_point), "%s",
-                             mount_options[mount_idx]);
-                    p->filesystem = FS_EXT4;
-                }
-
-                // Update partition flags.
-                p->flag_boot = (flag_idx == 1) ? 1 : 0;
-                p->flag_esp = (flag_idx == 2) ? 1 : 0;
-                return 1;
-            }
-
-            case 27:
-                // User cancelled, return without saving changes.
-                return 0;
-        }
+        return 0;
     }
+
+    // Update partition size from form value.
+    if (size_presets[size_idx] == 0)
+    {
+        p->size_bytes = free_space;
+    }
+    else
+    {
+        p->size_bytes = size_presets[size_idx];
+    }
+
+    // Clamp size to available free space.
+    if (p->size_bytes > free_space)
+    {
+        p->size_bytes = free_space;
+    }
+
+    // Update mount point and filesystem.
+    if (mount_idx == 4)
+    {
+        snprintf(p->mount_point, sizeof(p->mount_point), "[swap]");
+        p->filesystem = FS_SWAP;
+    }
+    else
+    {
+        snprintf(p->mount_point, sizeof(p->mount_point), "%s",
+                 mount_options[mount_idx]);
+        p->filesystem = FS_EXT4;
+    }
+
+    // Update partition flags.
+    p->flag_boot = (flag_idx == 1) ? 1 : 0;
+    p->flag_esp = (flag_idx == 2) ? 1 : 0;
+    return 1;
 }
 
 static int remove_partition_dialog(
