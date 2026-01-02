@@ -1,13 +1,5 @@
 #include "../all.h"
 
-/**
- * Validates a device name contains only safe characters.
- * Prevents path traversal by rejecting names with dots, slashes, etc.
- *
- * @param device The device name to validate.
- *
- * @return 1 if valid, 0 if invalid.
- */
 static int is_valid_device_name(const char *device)
 {
     // Ensure device name is not empty.
