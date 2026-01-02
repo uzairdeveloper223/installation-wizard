@@ -42,26 +42,54 @@ int run_confirmation_step(WINDOW *modal)
         mvwprintw(modal, 8, 3, "  Partitions: (none)");
     }
 
-    // Display warning about disk formatting.
-    char warning_text[128];
-    snprintf(
-        warning_text, sizeof(warning_text),
-        "All data on %s will be erased!\n"
-        "This action cannot be undone.", store->disk
-    );
-    render_warning(modal, 10, 3, warning_text);
+    // Check if root partition exists.
+    int has_root = 0;
+    for (int i = 0; i < store->partition_count; i++)
+    {
+        if (strcmp(store->partitions[i].mount_point, "/") == 0)
+        {
+            has_root = 1;
+            break;
+        }
+    }
 
-    // Display navigation footer.
-    const char *footer[] = {"[Enter] Install", "[Esc] Back", NULL};
-    render_footer(modal, footer);
+    // Render the appropriate message based on root partition presence.
+    if (has_root)
+    {
+        // Display warning about disk formatting.
+        char warning_text[128];
+        snprintf(
+            warning_text, sizeof(warning_text),
+            "All data on %s will be erased!\n"
+            "This action cannot be undone.", store->disk
+        );
+        render_warning(modal, 10, 3, warning_text);
+
+        // Display navigation footer.
+        const char *footer[] = {"[Enter] Install", "[Esc] Back", NULL};
+        render_footer(modal, footer);
+    }
+    else
+    {
+        // Display error about missing root partition.
+        render_error(modal, 10, 3,
+            "A root (/) partition is required.\n"
+            "Go back and add one to continue."
+        );
+
+        // Display navigation footer without install option.
+        const char *footer[] = {"[Esc] Back", NULL};
+        render_footer(modal, footer);
+    }
+
     wrefresh(modal);
 
     // Wait for user confirmation or back.
     int key;
-    while ((key = wgetch(modal)) != '\n' && key != 27)
+    while ((key = wgetch(modal)) != 27 && (key != '\n' || !has_root))
     {
         // Ignore other input.
     }
 
-    return key == '\n';
+    return key == '\n' && has_root;
 }
