@@ -161,15 +161,32 @@ static void test_run_cmd_not_dry_run_no_log_file(void **state)
 }
 
 /**
- * Verifies close_dry_run_log() is safe to call multiple times.
+ * Verifies close_dry_run_log() is safe to call multiple times and
+ * the system remains functional afterward.
  */
 static void test_close_dry_run_log_safe_when_not_open(void **state)
 {
     (void)state;
+    Store *store = get_store();
+    store->dry_run = 1;
 
     // Calling close multiple times should not cause issues.
     close_dry_run_log();
     close_dry_run_log();
+
+    // Verify system still works: can create new log after multiple closes.
+    run_cmd("test command after close");
+    close_dry_run_log();
+
+    FILE *file = fopen(DRY_RUN_LOG_PATH, "r");
+    assert_non_null(file);
+
+    char buffer[256];
+    char *line = fgets(buffer, sizeof(buffer), file);
+    fclose(file);
+
+    assert_non_null(line);
+    assert_string_equal("test command after close\n", buffer);
 }
 
 /**
