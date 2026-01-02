@@ -1,6 +1,6 @@
 #include "../../all.h"
 
-#define SIZE_COUNT 19
+#define SIZE_COUNT 22
 #define MOUNT_COUNT 5
 #define FLAG_COUNT 3
 #define TYPE_COUNT 2
@@ -32,13 +32,16 @@ static const unsigned long long size_presets[] =
     4000ULL * 1000000000,    // 4T
     6000ULL * 1000000000,    // 6T
     8000ULL * 1000000000,    // 8T
+    16000ULL * 1000000000,   // 16T
+    32000ULL * 1000000000,   // 32T
+    64000ULL * 1000000000,   // 64T
 };
 
 static const char *size_labels[] =
 {
     "64MB", "128MB", "256MB", "512MB", "1GB", "2GB", "4GB", "8GB",
     "16GB", "32GB", "64GB", "128GB", "256GB", "512GB",
-    "1TB", "2TB", "4TB", "6TB", "8TB"
+    "1TB", "2TB", "4TB", "6TB", "8TB", "16TB", "32TB", "64TB"
 };
 
 static const char *mount_options[] = { "/", "/boot", "/home", "/var", "swap" };
