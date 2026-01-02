@@ -48,16 +48,24 @@ $(TESTOBJDIR)/%.o: $(TESTDIR)/%.c
 	$(CC) $(TEST_CFLAGS) -c $< -o $@
 
 $(TESTBINDIR)/%: $(TESTOBJDIR)/%.o $(SRC_OBJECTS)
-	@mkdir -p $(TESTBINDIR)
+	@mkdir -p $(dir $@)
 	$(CC) $< $(SRC_OBJECTS) -o $@ $(TEST_LIBS)
 
 test: $(TEST_BINARIES)
-	@for t in $(TEST_BINARIES); do \
+	@failed=0; \
+	for t in $(TEST_BINARIES); do \
 		echo ""; \
-		echo "Running $$(basename $$t) tests..."; \
+		echo "Running tests from \"$(notdir $(TESTDIR))/$${t#$(TESTBINDIR)/}\":"; \
 		echo ""; \
-		$$t; \
-	done
+		$$t || failed=1; \
+	done; \
+	echo ""; \
+	if [ $$failed -eq 0 ]; then \
+		echo "All tests passed."; \
+	else \
+		echo "Some tests failed."; \
+		exit 1; \
+	fi
 
 test-clean:
 	rm -rf $(TESTOBJDIR) $(TESTBINDIR)
