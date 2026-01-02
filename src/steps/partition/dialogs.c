@@ -1,6 +1,6 @@
 #include "../../all.h"
 
-#define SIZE_COUNT 17
+#define SIZE_COUNT 20
 #define MOUNT_COUNT 5
 #define FLAG_COUNT 3
 #define TYPE_COUNT 2
@@ -28,13 +28,17 @@ static const unsigned long long size_presets[] =
     512ULL * 1000000000,     // 512G
     1000ULL * 1000000000,    // 1T
     2000ULL * 1000000000,    // 2T
+    4000ULL * 1000000000,    // 4T
+    5000ULL * 1000000000,    // 5T
+    8000ULL * 1000000000,    // 8T
     0                        // "Rest"
 };
 
 static const char *size_labels[] =
 {
     "64MB", "128MB", "256MB", "512MB", "1GB", "2GB", "4GB", "8GB",
-    "16GB", "32GB", "64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "Rest"
+    "16GB", "32GB", "64GB", "128GB", "256GB", "512GB",
+    "1TB", "2TB", "4TB", "5TB", "8TB", "Rest"
 };
 
 static const char *mount_options[] = { "/", "/boot", "/home", "/var", "swap" };
@@ -246,7 +250,7 @@ int add_partition_dialog(
     format_disk_size(free_space, free_str, sizeof(free_str));
 
     // Initialize form field indices with defaults.
-    int size_idx = 6;      // Default to 4G.
+    int size_idx = 11;     // Default to 128G.
     int mount_idx = 0;     // Default to /.
     int type_idx = 0;      // Default to primary.
     int flag_idx = 0;      // Default to none.
