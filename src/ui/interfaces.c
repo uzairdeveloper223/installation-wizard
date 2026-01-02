@@ -216,10 +216,10 @@ void render_table(
     }
 }
 
-void render_note(WINDOW *window, int y, int x, const char *text)
+static void render_styled_note(
+    WINDOW *window, int y, int x, const char *text, int accent_color
+)
 {
-    int color = CUSTOM_COLOR_PAIR_NOTE_TEXT;
-
     // Fill background area with slightly darker color.
     wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
     for (int row = 0; row < 2; row++)
@@ -229,12 +229,12 @@ void render_note(WINDOW *window, int y, int x, const char *text)
     wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
 
     // Draw accent line on the left.
-    wattron(window, COLOR_PAIR(color) | A_REVERSE);
+    wattron(window, COLOR_PAIR(accent_color) | A_REVERSE);
     for (int row = 0; row < 2; row++)
     {
         mvwaddch(window, y + row, x, ' ');
     }
-    wattroff(window, COLOR_PAIR(color) | A_REVERSE);
+    wattroff(window, COLOR_PAIR(accent_color) | A_REVERSE);
 
     // Render text on top of background.
     const char *line_start = text;
@@ -244,7 +244,7 @@ void render_note(WINDOW *window, int y, int x, const char *text)
     while (*line_start)
     {
         const char *line_end = strchr(line_start, '\n');
-        wattron(window, COLOR_PAIR(color));
+        wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
         if (line_end)
         {
             int len = line_end - line_start;
@@ -254,123 +254,32 @@ void render_note(WINDOW *window, int y, int x, const char *text)
         else
         {
             mvwprintw(window, y + line_num, text_x, "%s", line_start);
-            wattroff(window, COLOR_PAIR(color));
+            wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
             break;
         }
-        wattroff(window, COLOR_PAIR(color));
+        wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
         line_num++;
     }
+}
+
+void render_note(WINDOW *window, int y, int x, const char *text)
+{
+    render_styled_note(window, y, x, text, CUSTOM_COLOR_PAIR_NOTE_TEXT);
 }
 
 void render_info(WINDOW *window, int y, int x, const char *text)
 {
-    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
-    for (int row = 0; row < 2; row++)
-        mvwprintw(window, y + row, x + 1, "%*s", MODAL_WIDTH - 8, "");
-    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
-
-    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_INFO_NOTE) | A_REVERSE);
-    for (int row = 0; row < 2; row++)
-        mvwaddch(window, y + row, x, ' ');
-    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_INFO_NOTE) | A_REVERSE);
-
-    const char *line_start = text;
-    int line_num = 0;
-    int text_x = x + 2;
-
-    while (*line_start)
-    {
-        const char *line_end = strchr(line_start, '\n');
-        wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
-        if (line_end)
-        {
-            int len = line_end - line_start;
-            mvwprintw(window, y + line_num, text_x, "%.*s", len, line_start);
-            line_start = line_end + 1;
-        }
-        else
-        {
-            mvwprintw(window, y + line_num, text_x, "%s", line_start);
-            wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
-            break;
-        }
-        wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
-        line_num++;
-    }
+    render_styled_note(window, y, x, text, CUSTOM_COLOR_PAIR_INFO_NOTE);
 }
 
 void render_warning(WINDOW *window, int y, int x, const char *text)
 {
-    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
-    for (int row = 0; row < 2; row++)
-        mvwprintw(window, y + row, x + 1, "%*s", MODAL_WIDTH - 8, "");
-    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
-
-    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_WARNING_NOTE) | A_REVERSE);
-    for (int row = 0; row < 2; row++)
-        mvwaddch(window, y + row, x, ' ');
-    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_WARNING_NOTE) | A_REVERSE);
-
-    const char *line_start = text;
-    int line_num = 0;
-    int text_x = x + 2;
-
-    while (*line_start)
-    {
-        const char *line_end = strchr(line_start, '\n');
-        wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
-        if (line_end)
-        {
-            int len = line_end - line_start;
-            mvwprintw(window, y + line_num, text_x, "%.*s", len, line_start);
-            line_start = line_end + 1;
-        }
-        else
-        {
-            mvwprintw(window, y + line_num, text_x, "%s", line_start);
-            wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
-            break;
-        }
-        wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
-        line_num++;
-    }
+    render_styled_note(window, y, x, text, CUSTOM_COLOR_PAIR_WARNING_NOTE);
 }
 
 void render_error(WINDOW *window, int y, int x, const char *text)
 {
-    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
-    for (int row = 0; row < 2; row++)
-        mvwprintw(window, y + row, x + 1, "%*s", MODAL_WIDTH - 8, "");
-    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
-
-    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_ERROR_NOTE) | A_REVERSE);
-    for (int row = 0; row < 2; row++)
-        mvwaddch(window, y + row, x, ' ');
-    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_ERROR_NOTE) | A_REVERSE);
-
-    const char *line_start = text;
-    int line_num = 0;
-    int text_x = x + 2;
-
-    while (*line_start)
-    {
-        const char *line_end = strchr(line_start, '\n');
-        wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
-        if (line_end)
-        {
-            int len = line_end - line_start;
-            mvwprintw(window, y + line_num, text_x, "%.*s", len, line_start);
-            line_start = line_end + 1;
-        }
-        else
-        {
-            mvwprintw(window, y + line_num, text_x, "%s", line_start);
-            wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
-            break;
-        }
-        wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
-        line_num++;
-    }
+    render_styled_note(window, y, x, text, CUSTOM_COLOR_PAIR_ERROR_NOTE);
 }
 
 void render_form(
