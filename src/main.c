@@ -6,8 +6,43 @@
 
 #include "all.h"
 
+static const char *libraries[] = {
+    "libncurses.so.6"
+};
+
+static const char *commands[] = {
+    "parted",
+    "mkfs.ext4",
+    "mkswap",
+    "mount",
+    "swapon",
+    "tar"
+};
+
 int main(int argc, char *argv[])
 {
+    // Ensure that the required libraries are available.
+    const int library_count = sizeof(libraries) / sizeof(libraries[0]);
+    for (int i = 0; i < library_count; i++)
+    {
+        if (!is_library_available(libraries[i]))
+        {
+            fprintf(stderr, "Missing library \"%s\".\n", libraries[i]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Ensure that the required commands are available.
+    const int command_count = sizeof(commands) / sizeof(commands[0]);
+    for (int i = 0; i < command_count; i++)
+    {
+        if (!is_command_available(commands[i]))
+        {
+            fprintf(stderr, "Missing command \"%s\".\n", commands[i]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
     Store *store = get_store();
 
     // Parse command-line arguments.

@@ -12,10 +12,12 @@
 #include <sys/wait.h>
 #include <dirent.h>
 #include <ctype.h>
+#include <dlfcn.h>
 
 #include "store/store.h"
 #include "utils/cmd.h"
 #include "utils/disk.h"
+#include "utils/deps.h"
 #include "ui/ui.h"
 #include "ui/modal.h"
 #include "ui/interfaces.h"
