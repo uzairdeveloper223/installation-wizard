@@ -1,6 +1,6 @@
 /**
- * This code is responsible for testing the installation modules,
- * including partitioning, rootfs extraction, bootloader setup, and locale.
+ * This file contains unit tests for the partitioning functionality
+ * of the installer (e.g., create_partitions behavior).
  */
 
 #include "../../all.h"
