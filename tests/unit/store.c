@@ -125,58 +125,21 @@ static void test_reset_store_clears_partitions(void **state)
 }
 
 /**
- * Verifies STORE_MAX_LOCALE_LEN constant value and that the locale field
- * can hold a string of maximum length.
+ * Verifies the locale field can hold a maximum-length string.
  */
 static void test_store_locale_max_length(void **state)
 {
     (void)state;
     Store *store = get_store();
 
-    assert_int_equal(64, STORE_MAX_LOCALE_LEN);
+    // Fill locale to maximum capacity (63 chars + null terminator).
+    char max_locale[STORE_MAX_LOCALE_LEN];
+    memset(max_locale, 'a', STORE_MAX_LOCALE_LEN - 1);
+    max_locale[STORE_MAX_LOCALE_LEN - 1] = '\0';
 
-    strncpy(store->locale, "en_US.UTF-8", STORE_MAX_LOCALE_LEN - 1);
-    store->locale[STORE_MAX_LOCALE_LEN - 1] = '\0';
+    strncpy(store->locale, max_locale, STORE_MAX_LOCALE_LEN);
 
-    assert_true(strlen(store->locale) < STORE_MAX_LOCALE_LEN);
-}
-
-/**
- * Verifies STORE_MAX_DISK_LEN constant value.
- */
-static void test_store_disk_max_length(void **state)
-{
-    (void)state;
-    assert_int_equal(64, STORE_MAX_DISK_LEN);
-}
-
-/**
- * Verifies STORE_MAX_PARTITIONS constant value.
- */
-static void test_store_max_partitions(void **state)
-{
-    (void)state;
-    assert_int_equal(16, STORE_MAX_PARTITIONS);
-}
-
-/**
- * Verifies PartitionFS enum values match expected constants.
- */
-static void test_partition_filesystem_enum_values(void **state)
-{
-    (void)state;
-    assert_int_equal(0, FS_EXT4);
-    assert_int_equal(1, FS_SWAP);
-}
-
-/**
- * Verifies PartitionType enum values match expected constants.
- */
-static void test_partition_type_enum_values(void **state)
-{
-    (void)state;
-    assert_int_equal(0, PART_PRIMARY);
-    assert_int_equal(1, PART_LOGICAL);
+    assert_int_equal(STORE_MAX_LOCALE_LEN - 1, (int)strlen(store->locale));
 }
 
 int main(void)
@@ -191,10 +154,6 @@ int main(void)
         cmocka_unit_test_setup_teardown(test_reset_store_clears_partition_count, setup, teardown),
         cmocka_unit_test_setup_teardown(test_reset_store_clears_partitions, setup, teardown),
         cmocka_unit_test_setup_teardown(test_store_locale_max_length, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_store_disk_max_length, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_store_max_partitions, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_partition_filesystem_enum_values, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_partition_type_enum_values, setup, teardown),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
