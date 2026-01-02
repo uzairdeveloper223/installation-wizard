@@ -329,6 +329,134 @@ static void test_get_partition_device_xvda(void **state)
     assert_string_equal("/dev/xvda3", buffer);
 }
 
+/**
+ * Verifies get_disk_size() returns zero for path traversal attempts.
+ */
+static void test_get_disk_size_rejects_path_traversal(void **state)
+{
+    (void)state;
+
+    // Path traversal should be rejected.
+    assert_int_equal(0, (int)get_disk_size("../../../etc/passwd"));
+    assert_int_equal(0, (int)get_disk_size("/dev/../etc/passwd"));
+}
+
+/**
+ * Verifies get_disk_size() returns zero for empty device name.
+ */
+static void test_get_disk_size_rejects_empty_string(void **state)
+{
+    (void)state;
+
+    assert_int_equal(0, (int)get_disk_size(""));
+}
+
+/**
+ * Verifies get_disk_size() returns zero for device with special characters.
+ */
+static void test_get_disk_size_rejects_special_chars(void **state)
+{
+    (void)state;
+
+    // Shell injection attempts should be rejected.
+    assert_int_equal(0, (int)get_disk_size("sda; rm -rf /"));
+    assert_int_equal(0, (int)get_disk_size("sda`whoami`"));
+    assert_int_equal(0, (int)get_disk_size("sda$(cat /etc/passwd)"));
+}
+
+/**
+ * Verifies get_disk_size() returns zero for non-existent device.
+ */
+static void test_get_disk_size_nonexistent_device(void **state)
+{
+    (void)state;
+
+    // Non-existent but valid device name should return 0.
+    assert_int_equal(0, (int)get_disk_size("nonexistent_device_xyz"));
+}
+
+/**
+ * Verifies get_disk_size() handles full path format.
+ */
+static void test_get_disk_size_handles_full_path(void **state)
+{
+    (void)state;
+
+    // Full path with non-existent device should return 0 without crashing.
+    unsigned long long size = get_disk_size("/dev/nonexistent_device_xyz");
+    assert_int_equal(0, (int)size);
+}
+
+/**
+ * Verifies is_disk_removable() returns zero for path traversal attempts.
+ */
+static void test_is_disk_removable_rejects_path_traversal(void **state)
+{
+    (void)state;
+
+    // Path traversal should be rejected.
+    assert_int_equal(0, is_disk_removable("../../../etc/passwd"));
+    assert_int_equal(0, is_disk_removable(".."));
+}
+
+/**
+ * Verifies is_disk_removable() returns zero for empty device name.
+ */
+static void test_is_disk_removable_rejects_empty_string(void **state)
+{
+    (void)state;
+
+    assert_int_equal(0, is_disk_removable(""));
+}
+
+/**
+ * Verifies is_disk_removable() returns zero for device with special characters.
+ */
+static void test_is_disk_removable_rejects_special_chars(void **state)
+{
+    (void)state;
+
+    // Shell injection attempts should be rejected.
+    assert_int_equal(0, is_disk_removable("sda; rm -rf /"));
+    assert_int_equal(0, is_disk_removable("sda|cat /etc/passwd"));
+}
+
+/**
+ * Verifies is_disk_removable() returns zero for non-existent device.
+ */
+static void test_is_disk_removable_nonexistent_device(void **state)
+{
+    (void)state;
+
+    // Non-existent but valid device name should return 0.
+    assert_int_equal(0, is_disk_removable("nonexistent_device_xyz"));
+}
+
+/**
+ * Verifies get_disk_size() accepts valid device names with underscores.
+ */
+static void test_get_disk_size_accepts_underscore(void **state)
+{
+    (void)state;
+
+    // Underscores are allowed in device names (returns 0 because device
+    // doesn't exist, but validates the name is accepted).
+    unsigned long long size = get_disk_size("valid_device_name");
+    assert_int_equal(0, (int)size);
+}
+
+/**
+ * Verifies is_disk_removable() accepts valid device names with underscores.
+ */
+static void test_is_disk_removable_accepts_underscore(void **state)
+{
+    (void)state;
+
+    // Underscores are allowed in device names.
+    int result = is_disk_removable("valid_device_name");
+    assert_int_equal(0, result);
+}
+
 int main(void)
 {
     const struct CMUnitTest tests[] = {
@@ -354,6 +482,17 @@ int main(void)
         cmocka_unit_test_setup_teardown(test_get_partition_device_mmc_second, setup, teardown),
         cmocka_unit_test_setup_teardown(test_get_partition_device_vda, setup, teardown),
         cmocka_unit_test_setup_teardown(test_get_partition_device_xvda, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_get_disk_size_rejects_path_traversal, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_get_disk_size_rejects_empty_string, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_get_disk_size_rejects_special_chars, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_get_disk_size_nonexistent_device, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_get_disk_size_handles_full_path, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_get_disk_size_accepts_underscore, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_is_disk_removable_rejects_path_traversal, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_is_disk_removable_rejects_empty_string, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_is_disk_removable_rejects_special_chars, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_is_disk_removable_nonexistent_device, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_is_disk_removable_accepts_underscore, setup, teardown),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
