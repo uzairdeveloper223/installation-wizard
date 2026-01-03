@@ -268,6 +268,10 @@ project.
    _**Why?**_ Research suggests ~50-75 characters is easiest to read. 80 is a
    practical cap that works well in terminals and side-by-side diffs.
 
+   _**Exception:**_ Comments **may** exceed 80 characters when wrapping would
+   harm readability (e.g., URLs, long identifiers, code-like snippets, or
+   Doxygen tag lines that become worse when wrapped).
+
 2. Comments using sentence grammar **must** follow natural language conventions
    (e.g., end with a full stop).
 
@@ -322,13 +326,14 @@ int update_item_value(Item *item, int new_value)
 
 **Rules**
 
-1. Each logical step **must** have a directive comment above it; the first or
-   last step **may** be omitted if self-evident (e.g., a simple return
-   statement).
+1. Each logical step **must** have a directive comment above it.
 
    _**Why?**_ Directive comments let readers skim logic without parsing
    implementation. Remove the code, and the comments alone should convey
    the algorithm.
+
+   _**Exception:**_ The first or last step **may** be omitted if self-evident
+   (e.g., a simple return statement).
 
 2. Steps **must** be separated by a blank line; code within a step **must not**
    contain blank lines.
@@ -453,11 +458,13 @@ int connect_to_server(const char *host);
    _**Why?**_ Names don't always capture intent. Requiring comments removes
    ambiguity about what should be documented, reducing decision fatigue.
 
-2. The comment **should** explain why, unless the role is self-evident; trivial
-   declarations **may** use a single-line form.
+2. The comment **should** explain why.
 
    _**Why?**_ The "purpose" captures intent code cannot express, but forcing it
    on trivial cases creates noise.
+
+   _**Exception:**_ The explanation **may** be omitted when the role is
+   self-evident; trivial declarations **may** use a single-line form.
 
 3. The comment **must not** explain how; reserve that for directive comments in
    the implementation.
@@ -540,11 +547,13 @@ This subsection defines naming conventions for variables.
    _**Why?**_ Ambiguous names force readers to trace assignments, breaking
    their reading flow and forcing unnecessary context-switching.
 
-3. Variable names **must not** use abbreviations, except for standard ones
-   (e.g., `id` for identifier).
+3. Variable names **must not** use abbreviations.
 
    _**Why?**_ Abbreviations create project-specific vocabulary that readers
    must memorize and reduce discoverability in search.
+
+   _**Exception:**_ Standard abbreviations **may** be used
+   (e.g., `id` for identifier).
 
 #### Naming parameters
 
@@ -561,11 +570,13 @@ This subsection defines naming conventions for function parameters.
    _**Why?**_ Vague parameter names force readers to jump to the function
    definition to understand what to pass.
 
-3. Parameter names **must not** use abbreviations, except for standard ones
-   (e.g., `id` for identifier).
+3. Parameter names **must not** use abbreviations.
 
    _**Why?**_ Parameters are read most often at the call site. Avoiding
    abbreviations keeps intent obvious.
+
+   _**Exception:**_ Standard abbreviations **may** be used
+   (e.g., `id` for identifier).
 
 4. Output parameters **must** be prefixed with `out_`.
 
@@ -630,11 +641,13 @@ This subsection defines naming conventions for source and header files.
 
    _**Why?**_ Short names scan faster in directory trees and include statements.
 
-3. File names **must not** use abbreviations unless widely understood
-   (e.g., `auth`).
+3. File names **must not** use abbreviations.
 
    _**Why?**_ Abbreviations make files harder to find via search and increase
    inconsistent naming.
+
+   _**Exception:**_ Widely understood abbreviations **may** be used
+   (e.g., `auth`).
 
 4. File names **should** let directory structure provide context
    (e.g., `user/auth/tokens.c`).
@@ -715,9 +728,8 @@ and understand code components.
    _**Why?**_ Paired naming makes finding the interface for any implementation
    trivial.
 
-5. `main.c` **may** omit a corresponding header file.
-
-   _**Why?**_ Entry points typically don't expose APIs to other modules.
+   _**Exception:**_ `main.c` **may** omit a corresponding header file, as entry
+   points typically don't expose APIs to other modules.
 
 **Example**
 
@@ -772,8 +784,9 @@ images, or other media.
 1. Document assets **must** be stored in the `.assets` directory at the
    repository root.
 
-   _**Why?**_ Using a platform-agnostic name eases migration if hosting changes.
-   Considering `.github` is a common standard.
+   _**Why?**_ Using a neutral, repo-local assets directory keeps docs portable
+   across hosting providers and avoids coupling to GitHub-specific conventions
+   like `.github`.
 
 2. Assets **should** be organized into subdirectories that group related files
    (e.g., `.assets/banner/`, `.assets/icons/`).
@@ -907,11 +920,9 @@ Where:
    _**Why?**_ Without the note, readers won't know rules conflict or stack;
    explicit precedence prevents misapplication.
 
-5. **Template** and **Example** sections **may** be omitted when the rules
-   are self-evident.
-
-   _**Why?**_ Forcing examples on simple rule sets adds bulk without clarifying
-   intent.
+   _**Exception:**_ **Template** and **Example** sections **may** be omitted
+   when the rules are self-evident, as forcing examples on simple rule sets
+   adds bulk without clarifying intent.
 
 ### Modifying README.md
 
