@@ -545,15 +545,14 @@ This subsection defines naming conventions for functions.
    _**Why?**_ Verb-noun makes intent explicit at the call site, reducing
    cognitive load when scanning code.
 
-3. Function names **should** incorporate the name of their module
-   (e.g., `read_config()` in `config` module).
+3. Public function names **should** include the module name after the verb
+   (e.g., `load_config()` in the `config` module).
 
-   _**Why?**_ Module prefixes prevent name collisions and make the function's
-   origin clear without checking includes.
+   _**Why?**_ Putting the module name in the function name prevents collisions
+   and makes call sites self-explanatory, while keeping names readable because
+   they start with an action.
 
-   _**Exception:**_ Static functions **may** omit the module prefix since they
-   are not exposed externally, though including it is still preferred for
-   consistency.
+   _**Exception:**_ Static (private) functions **may** omit the module name.
 
 #### Naming variables
 
