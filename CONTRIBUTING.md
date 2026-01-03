@@ -156,7 +156,7 @@ This repository uses two main branches:
    _**Why?**_ Forks isolate work-in-progress without granting write access to
    the main repository.
 
-   _**Exception:**_ Project members **may** branch directly in the main
+   _**Exception!**_ Project members **may** branch directly in the main
    repository, but **must** still follow the branching and review rules below.
 
 2. Branches **must** use one of the following prefixes: `feature/`, `fix/`,
@@ -283,7 +283,7 @@ project.
    _**Why?**_ Research suggests ~50-75 characters is easiest to read. 80 is a
    practical cap that works well in terminals and side-by-side diffs.
 
-   _**Exception:**_ Comments **may** exceed 80 characters when wrapping would
+   _**Exception!**_ Comments **may** exceed 80 characters when wrapping would
    harm readability (e.g., URLs, long identifiers, code-like snippets, or
    Doxygen tag lines that become worse when wrapped).
 
@@ -349,7 +349,7 @@ int update_item_value(Item *item, int new_value)
    implementation. Remove the code, and the comments alone should convey
    the algorithm.
 
-   _**Exception:**_ The first or last step **may** be omitted if self-evident
+   _**Exception!**_ The first or last step **may** be omitted if self-evident
    (e.g., a simple return statement).
 
 2. Steps **must** be separated by a blank line; code within a step **must not**
@@ -483,7 +483,7 @@ int connect_to_server(const char *host);
    _**Why?**_ The "purpose" captures intent code cannot express, but forcing it
    on trivial cases creates noise.
 
-   _**Exception:**_ The explanation **may** be omitted when the role is
+   _**Exception!**_ The explanation **may** be omitted when the role is
    self-evident; trivial declarations **may** use a single-line form.
 
 3. The comment **must not** explain how; reserve that for directive comments in
@@ -554,7 +554,7 @@ This subsection defines naming conventions for functions.
    and makes call sites self-explanatory, while keeping names readable because
    they start with an action.
 
-   _**Exception:**_ Static (private) functions **may** omit the module name.
+   _**Exception!**_ Static (private) functions **may** omit the module name.
 
 #### Naming variables
 
@@ -575,7 +575,7 @@ This subsection defines naming conventions for variables.
    _**Why?**_ Abbreviations create project-specific vocabulary that readers
    must memorize and reduce discoverability in search.
 
-   _**Exception:**_ Standard abbreviations **may** be used
+   _**Exception!**_ Standard abbreviations **may** be used
    (e.g., `id` for identifier).
 
 #### Naming parameters
@@ -598,7 +598,7 @@ This subsection defines naming conventions for function parameters.
    _**Why?**_ Parameters are read most often at the call site. Avoiding
    abbreviations keeps intent obvious.
 
-   _**Exception:**_ Standard abbreviations **may** be used
+   _**Exception!**_ Standard abbreviations **may** be used
    (e.g., `id` for identifier).
 
 4. Output parameters **must** be prefixed with `out_`.
@@ -626,7 +626,7 @@ This subsection defines naming conventions for types (structs, enums, typedefs).
 
    _**Why?**_ Module prefixes prevent name collisions across the codebase.
 
-   _**Exception:**_ Private types **may** omit the module prefix since they are
+   _**Exception!**_ Private types **may** omit the module prefix since they are
    not exposed externally, though including it is still preferred for
    consistency.
 
@@ -655,7 +655,7 @@ This subsection defines naming conventions for preprocessor macros.
    _**Why?**_ Module prefixes prevent name collisions and group related
    constants visually.
 
-   _**Exception:**_ Private macros **may** omit the module prefix since they are
+   _**Exception!**_ Private macros **may** omit the module prefix since they are
    not exposed externally, though including it is still preferred for
    consistency.
 
@@ -677,7 +677,7 @@ This subsection defines naming conventions for source and header files.
    _**Why?**_ Abbreviations make files harder to find via search and increase
    inconsistent naming.
 
-   _**Exception:**_ Widely understood abbreviations **may** be used
+   _**Exception!**_ Widely understood abbreviations **may** be used
    (e.g., `auth`).
 
 4. File names **should** let directory structure provide context
@@ -760,7 +760,7 @@ and understand code components.
    _**Why?**_ Paired naming makes finding the interface for any implementation
    trivial.
 
-   _**Exception:**_ Unpaired `.c` or `.h` files **may** exist for legitimate
+   _**Exception!**_ Unpaired `.c` or `.h` files **may** exist for legitimate
    patterns (e.g., `main.c` without a header, test files, header-only utilities,
    aggregator headers like `all.h`, platform-specific headers, or generated
    headers).
@@ -936,7 +936,7 @@ Where:
    _**Why?**_ The rule states the contract; the why preserves intent so future
    edits don't regress.
 
-2. Rules **may** include an _**Exception:**_ paragraph after the _**Why?**_
+2. Rules **may** include an _**Exception!**_ paragraph after the _**Why?**_
    paragraph when legitimate cases exist that should not follow the rule.
 
    _**Why?**_ Exceptions prevent rules from being overly rigid; placing them
@@ -968,7 +968,7 @@ Where:
    _**Why?**_ Templates provide structure, examples demonstrate usage, and
    rules codify requirements; together they make conventions actionable.
 
-   _**Exception:**_ **Template** and **Example** sections **may** be omitted
+   _**Exception!**_ **Template** and **Example** sections **may** be omitted
    when the rules are self-evident, as forcing examples on simple rule sets
    adds bulk without clarifying intent.
 
