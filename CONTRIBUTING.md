@@ -219,14 +219,16 @@ Where:
 - `VERB` - An imperative verb (e.g., "Add", "Fix", "Remove", "Update").
 - `ACTION` - What the commit accomplishes.
 
-To write a commit message, think: "This commit will ..." and complete the
-sentence. Drop the filler words and use the completion as your subject line.
+To produce this format, think: "This commit will ..." and complete the sentence.
+The completion is your subject line.
 
 **Example**
 
-- "This commit will ..." → `Add disk selection step to wizard`
-- "This commit will ..." → `Fix memory leak in partition parser`
-- "This commit will ..." → `Remove deprecated locale functions`
+| Mental test              | Subject line                          |
+| ------------------------ | ------------------------------------- |
+| "This commit will ..." → | `Add disk selection step to wizard`   |
+| "This commit will ..." → | `Fix memory leak in partition parser` |
+| "This commit will ..." → | `Remove deprecated locale functions`  |
 
 **Rules**
 
@@ -311,13 +313,13 @@ int update_item_value(Item *item, int new_value)
     // Ensure the item pointer is not NULL.
     if (item == NULL)
     {
-        return ERROR_NULL_POINTER;
+        return -1;
     }
 
     // Validate the new value against allowed range.
     if (new_value < MIN_VALUE || new_value > MAX_VALUE)
     {
-        return ERROR_VALUE_OUT_OF_RANGE;
+        return -2;
     }
 
     // Assign the new value to the item.
