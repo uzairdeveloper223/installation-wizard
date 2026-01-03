@@ -109,8 +109,9 @@ sudo ./bin/limeos-installation-wizard
 
 ### Testing the installation wizard
 
-This subsection explains how to run the unit test suite. The tests do not write
-to disk or modify system state, and are thus safe to run on any machine.
+This subsection explains how to run the unit test suite. The tests do not modify
+disks/partitions or require root privileges; they only build and run in user
+space, and are thus safe to run on any machine.
 
 First, ensure the cmocka testing library is installed. For Debian-based Linux
 distributions, run:
@@ -700,10 +701,11 @@ and understand code components.
 
 1. The root directory **must** contain only essential files: build
    configurations (`Makefile`), documentation (`README.md`, `CONTRIBUTING.md`),
-   important directories (`src`, `bin`, `obj`), and license information.
+   important directories (`src`, `bin`, `obj`, `tests`, `assets`, `.assets`),
+   and license information.
 
-   _**Why?**_ A minimal root keeps the entry point clean and scannable; clutter
-   buries important files.
+   _**Why?**_ A minimal, consistent root keeps the entry point clean and
+   scannable; clutter confuses contributors and is a bad first impression.
 
 2. All source code **must** reside within the `src` directory.
 
