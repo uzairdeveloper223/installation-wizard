@@ -8,10 +8,14 @@
 
 ######
 
-This installation wizard is responsible for installing LimeOS onto a target
-system in a clear and controlled manner. Designed to be simple and deliberate,
-it guides the user through the essential installation steps without unnecessary
-complexity, focusing on correctness, transparency, and a predictable outcome.
+A terminal-based installation wizard for LimeOS. It walks users through locale
+selection, disk selection, and partition configuration, then performs the
+installation by partitioning the disk, extracting the root filesystem, and
+setting up the bootloader.
+
+> This application is still a **work in progress**. Some features may be
+> incomplete or subject to change while development continues. This note will
+> be removed as soon as the application is ready for everyday use.
 
 ### Philosophy
 
