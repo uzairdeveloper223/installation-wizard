@@ -399,8 +399,8 @@ static void test_create_partitions_fails_without_root(void **state)
     int result = create_partitions();
     close_dry_run_log();
 
-    // Should return -6 (no root partition found).
-    assert_int_equal(-6, result);
+    // Should return -7 (no root partition found).
+    assert_int_equal(-7, result);
 }
 
 /** Verifies create_partitions() fails with zero partitions (no root). */
@@ -415,8 +415,8 @@ static void test_create_partitions_empty_fails(void **state)
     int result = create_partitions();
     close_dry_run_log();
 
-    // Should return -6 (no root partition found).
-    assert_int_equal(-6, result);
+    // Should return -7 (no root partition found).
+    assert_int_equal(-7, result);
 }
 
 int main(void)

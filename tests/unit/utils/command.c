@@ -195,6 +195,99 @@ static void test_close_dry_run_log_flushes_content(void **state)
     assert_true(strlen(buffer) > 0);
 }
 
+/** Verifies shell_escape() wraps a simple string in single quotes. */
+static void test_shell_escape_simple_string(void **state)
+{
+    (void)state;
+    char output[256];
+
+    int result = shell_escape("/dev/sda", output, sizeof(output));
+
+    assert_int_equal(0, result);
+    assert_string_equal("'/dev/sda'", output);
+}
+
+/** Verifies shell_escape() escapes embedded single quotes. */
+static void test_shell_escape_with_single_quote(void **state)
+{
+    (void)state;
+    char output[256];
+
+    int result = shell_escape("it's a test", output, sizeof(output));
+
+    assert_int_equal(0, result);
+    assert_string_equal("'it'\\''s a test'", output);
+}
+
+/** Verifies shell_escape() handles multiple single quotes. */
+static void test_shell_escape_multiple_quotes(void **state)
+{
+    (void)state;
+    char output[256];
+
+    int result = shell_escape("'a'b'", output, sizeof(output));
+
+    assert_int_equal(0, result);
+    assert_string_equal("''\\''a'\\''b'\\'''", output);
+}
+
+/** Verifies shell_escape() handles an empty string. */
+static void test_shell_escape_empty_string(void **state)
+{
+    (void)state;
+    char output[256];
+
+    int result = shell_escape("", output, sizeof(output));
+
+    assert_int_equal(0, result);
+    assert_string_equal("''", output);
+}
+
+/** Verifies shell_escape() returns -1 when buffer is too small. */
+static void test_shell_escape_buffer_too_small(void **state)
+{
+    (void)state;
+    char output[5];
+
+    int result = shell_escape("/dev/sda", output, sizeof(output));
+
+    assert_int_equal(-1, result);
+}
+
+/** Verifies shell_escape() returns -1 for NULL input. */
+static void test_shell_escape_null_input(void **state)
+{
+    (void)state;
+    char output[256];
+
+    int result = shell_escape(NULL, output, sizeof(output));
+
+    assert_int_equal(-1, result);
+}
+
+/** Verifies shell_escape() returns -1 for NULL output buffer. */
+static void test_shell_escape_null_output(void **state)
+{
+    (void)state;
+
+    int result = shell_escape("/dev/sda", NULL, 256);
+
+    assert_int_equal(-1, result);
+}
+
+/** Verifies shell_escape() handles special shell characters safely. */
+static void test_shell_escape_special_chars(void **state)
+{
+    (void)state;
+    char output[256];
+
+    // These chars are safe inside single quotes, only ' needs escaping.
+    int result = shell_escape("/home; rm -rf /", output, sizeof(output));
+
+    assert_int_equal(0, result);
+    assert_string_equal("'/home; rm -rf /'", output);
+}
+
 int main(void)
 {
     const struct CMUnitTest tests[] = {
@@ -207,6 +300,14 @@ int main(void)
         cmocka_unit_test_setup_teardown(test_run_command_not_dry_run_no_log_file, setup, teardown),
         cmocka_unit_test_setup_teardown(test_close_dry_run_log_safe_when_not_open, setup, teardown),
         cmocka_unit_test_setup_teardown(test_close_dry_run_log_flushes_content, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_shell_escape_simple_string, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_shell_escape_with_single_quote, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_shell_escape_multiple_quotes, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_shell_escape_empty_string, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_shell_escape_buffer_too_small, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_shell_escape_null_input, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_shell_escape_null_output, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_shell_escape_special_chars, setup, teardown),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

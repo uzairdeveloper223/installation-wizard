@@ -7,10 +7,18 @@
 
 static int verify_chroot_works(void)
 {
-    // Create a unique marker file in the chroot's tmp directory.
     const char *marker = "/mnt/tmp/.chroot_verify";
+    
+    // Escape the marker path for shell command.
+    char escaped_marker[256];
+    if (shell_escape(marker, escaped_marker, sizeof(escaped_marker)) != 0)
+    {
+        return -1;
+    }
+    
+    // Create marker file inside chroot /mnt.
     char cmd[256];
-    snprintf(cmd, sizeof(cmd), "echo 'limeos' > '%s'", marker);
+    snprintf(cmd, sizeof(cmd), "echo 'limeos' > %s", escaped_marker);
     if (run_command(cmd) != 0)
     {
         return -1;
@@ -21,7 +29,7 @@ static int verify_chroot_works(void)
     int result = run_command("chroot /mnt cat /tmp/.chroot_verify >/dev/null 2>&1");
 
     // Clean up marker file.
-    snprintf(cmd, sizeof(cmd), "rm -f '%s'", marker);
+    snprintf(cmd, sizeof(cmd), "rm -f %s", escaped_marker);
     run_command(cmd);
 
     return (result == 0) ? 0 : -1;
@@ -54,6 +62,13 @@ static int mount_efi_partition(const char *disk, int esp_partition_index)
     char esp_device[128];
     get_partition_device(disk, esp_partition_index, esp_device, sizeof(esp_device));
 
+    // Escape the device path for shell command.
+    char escaped_device[256];
+    if (shell_escape(esp_device, escaped_device, sizeof(escaped_device)) != 0)
+    {
+        return -1;
+    }
+
     // Create the EFI mount point directory.
     if (run_command("mkdir -p /mnt/boot/efi") != 0)
     {
@@ -62,8 +77,10 @@ static int mount_efi_partition(const char *disk, int esp_partition_index)
 
     // Mount the EFI system partition.
     char mount_cmd[256];
-    snprintf(mount_cmd, sizeof(mount_cmd),
-        "mount -t vfat '%s' /mnt/boot/efi", esp_device);
+    snprintf(
+        mount_cmd, sizeof(mount_cmd),
+        "mount -t vfat %s /mnt/boot/efi", escaped_device
+    );
     if (run_command(mount_cmd) != 0)
     {
         return -2;
@@ -101,13 +118,20 @@ static void unmount_chroot_system_dirs(void)
 
 static int install_grub_packages(int is_uefi)
 {
-    char cmd[512];
     const char *pkg_dir = is_uefi
-        ? "/usr/share/limeos/packages/efi"
-        : "/usr/share/limeos/packages/bios";
-
+    ? "/usr/share/limeos/packages/efi"
+    : "/usr/share/limeos/packages/bios";
+    
+    // Escape the package directory path for shell command.
+    char escaped_dir[256];
+    if (shell_escape(pkg_dir, escaped_dir, sizeof(escaped_dir)) != 0)
+    {
+        return -7;
+    }
+    
     // Copy all .deb files to chroot.
-    snprintf(cmd, sizeof(cmd), "cp '%s'/*.deb /mnt/tmp/", pkg_dir);
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "cp %s/*.deb /mnt/tmp/", escaped_dir);
     if (run_command(cmd) != 0)
     {
         return -7;
@@ -142,8 +166,16 @@ static int run_grub_install(const char *disk, int is_uefi)
     }
     else
     {
-        snprintf(cmd, sizeof(cmd),
-            "chroot /mnt /usr/sbin/grub-install '%s' >>" INSTALL_LOG_PATH " 2>&1", disk);
+        char escaped_disk[256];
+        if (shell_escape(disk, escaped_disk, sizeof(escaped_disk)) != 0)
+        {
+            return -10;
+        }
+        snprintf(
+            cmd, sizeof(cmd),
+            "chroot /mnt /usr/sbin/grub-install %s >>" INSTALL_LOG_PATH " 2>&1", 
+            escaped_disk
+        );
         if (run_command(cmd) != 0)
         {
             return -10;

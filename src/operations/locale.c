@@ -19,8 +19,10 @@ static int is_valid_locale(const char *locale)
         return 0;
     }
 
-    // Validate characters, ensuring at least one underscore is present.
-    // Locale must contain an underscore separating language and region.
+    // Validate characters: only allow alphanumeric, underscore, dot, hyphen, 
+    // and at-sign. These are the only characters valid in locale identifiers, 
+    // ensuring both semantic validity and shell/sed safety without needing
+    // additional escaping.
     int has_underscore = 0;
     for (size_t i = 0; i < len; i++)
     {
@@ -42,7 +44,8 @@ int configure_locale(void)
 {
     Store *store = get_store();
 
-    // Validate locale to prevent shell injection.
+    // Validate locale format and characters. The character validation ensures 
+    // shell/sed safety for this constrained input.
     if (!is_valid_locale(store->locale))
     {
         return -1;

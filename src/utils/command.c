@@ -95,3 +95,49 @@ void close_dry_run_log(void)
         dry_run_log = NULL;
     }
 }
+
+int shell_escape(const char *input, char *output, size_t output_size)
+{
+    if (input == NULL || output == NULL || output_size < 3)
+    {
+        return -1;
+    }
+
+    size_t out_pos = 0;
+    size_t in_len = strlen(input);
+
+    // Add opening quote to output.
+    output[out_pos++] = '\'';
+
+    // Process each character in input.
+    for (size_t i = 0; i < in_len; i++)
+    {
+        if (input[i] == '\'')
+        {
+            // Need 4 chars for '\'' plus space for closing quote.
+            if (out_pos + 5 > output_size)
+            {
+                return -1;
+            }
+            output[out_pos++] = '\'';
+            output[out_pos++] = '\\';
+            output[out_pos++] = '\'';
+            output[out_pos++] = '\'';
+        }
+        else
+        {
+            // Need space for this char plus closing quote and null.
+            if (out_pos + 3 > output_size)
+            {
+                return -1;
+            }
+            output[out_pos++] = input[i];
+        }
+    }
+
+    // Closing quote and null terminator.
+    output[out_pos++] = '\'';
+    output[out_pos] = '\0';
+
+    return 0;
+}

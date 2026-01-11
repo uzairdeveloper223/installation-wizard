@@ -35,3 +35,18 @@ typedef void (*CommandPollCallback)(void);
  * @param callback Function to call during polling, or NULL to disable.
  */
 void set_command_poll_callback(CommandPollCallback callback);
+
+/**
+ * Escapes a string for safe use in shell commands.
+ *
+ * Wraps the input in single quotes and escapes any embedded single quotes
+ * using the '\'' technique (end quote, literal quote, start quote).
+ *
+ * @param input The string to escape.
+ * @param output Buffer to write the escaped string.
+ * @param output_size Size of the output buffer.
+ *
+ * @return - `0` - Success.
+ * @return - `-1` - Output buffer too small.
+ */
+int shell_escape(const char *input, char *output, size_t output_size);
