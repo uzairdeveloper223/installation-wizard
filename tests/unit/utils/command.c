@@ -3,7 +3,7 @@
  * including dry-run mode logging and actual command execution.
  */
 
-#include "../all.h"
+#include "../../all.h"
 
 /** Sets up the test environment before each test. */
 static int setup(void **state)

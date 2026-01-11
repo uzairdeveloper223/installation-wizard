@@ -3,7 +3,7 @@
  * including library availability and command availability checks.
  */
 
-#include "../all.h"
+#include "../../all.h"
 
 /** Verifies is_library_available() returns 1 for an existing library. */
 static void test_is_library_available_returns_true_for_existing(void **state)

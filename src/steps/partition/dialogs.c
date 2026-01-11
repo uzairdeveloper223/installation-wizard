@@ -17,7 +17,7 @@
 #define DEFAULT_SIZE_INDEX 12
 #define MIN_PARTITION_SIZE (1ULL * 1000000)
 
-static const unsigned long long size_presets[] =
+semistatic const unsigned long long size_presets[] =
 {
     1ULL * 1000000,          // 1MB
     2ULL * 1000000,          // 2MB
@@ -40,17 +40,17 @@ static const unsigned long long size_presets[] =
     1000ULL * 1000000000,    // 1TB
 };
 
-static const char *size_labels[] =
+semistatic const char *size_labels[] =
 {
     "1MB", "2MB", "4MB", "8MB", "16MB", "32MB", "64MB", "128MB", "512MB",
     "1GB", "2GB", "4GB", "8GB", "16GB", "32GB", "64GB", "128GB", "512GB", "1TB"
 };
 
-static const char *mount_options[] = { "/", "/boot", "/home", "/var", "swap", "none" };
+semistatic const char *mount_options[] = { "/", "/boot", "/home", "/var", "swap", "none" };
 static const char *flag_options[] = { "none", "boot", "esp", "bios_grub" };
 static const char *type_options[] = { "primary", "logical" };
 
-static int find_closest_size_idx(unsigned long long size)
+semistatic int find_closest_size_index(unsigned long long size)
 {
     // Iterate through presets to find the closest match.
     for (int i = 0; i < SIZE_COUNT - 1; i++)
@@ -77,7 +77,7 @@ static int find_closest_size_idx(unsigned long long size)
     return SIZE_COUNT - 1;
 }
 
-static int find_mount_idx(const char *mount)
+semistatic int find_mount_index(const char *mount)
 {
     // Handle swap partition mount point.
     if (strcmp(mount, "[swap]") == 0)
@@ -104,7 +104,7 @@ static int find_mount_idx(const char *mount)
     return 0;
 }
 
-static int find_flag_idx(int boot, int esp, int bios_grub)
+semistatic int find_flag_index(int boot, int esp, int bios_grub)
 {
     // Return index based on which flag is set.
     if (boot) return 1;
@@ -116,7 +116,7 @@ static int find_flag_idx(int boot, int esp, int bios_grub)
 static int run_partition_form(
     WINDOW *modal, const char *title, const char *free_str,
     unsigned long long free_space,
-    int *size_idx, int *mount_idx, int *type_idx, int *flag_idx,
+    int *size_index, int *mount_index, int *type_index, int *flag_index,
     const char *footer_action
 )
 {
@@ -126,7 +126,7 @@ static int run_partition_form(
     while (1)
     {
         // Check if selected size exceeds available space.
-        unsigned long long selected_size = size_presets[*size_idx];
+        unsigned long long selected_size = size_presets[*size_index];
         int exceeds = (selected_size > free_space);
 
         // Set up form fields.
@@ -137,15 +137,15 @@ static int run_partition_form(
               "Sizes exceeding free space will be clamped.";
 
         FormField fields[FIELD_COUNT] = {
-            { "Size",       size_labels,   SIZE_COUNT,  *size_idx,  0,
+            { "Size",       size_labels,   SIZE_COUNT,  *size_index,  0,
               size_desc, exceeds },
-            { "Mount",      mount_options, MOUNT_COUNT, *mount_idx, 0,
+            { "Mount",      mount_options, MOUNT_COUNT, *mount_index, 0,
               "Where this partition will be accessible.\n"
               "Filesystem (ext4, swap) is automatically chosen.", 0 },
-            { "Type",       type_options,  TYPE_COUNT,  *type_idx,  0,
+            { "Type",       type_options,  TYPE_COUNT,  *type_index,  0,
               "Partition type. Primary is standard for most uses.\n"
               "Use logical partitions inside extended partitions.", 0 },
-            { "Flags",      flag_options,  FLAG_COUNT,  *flag_idx,  0,
+            { "Flags",      flag_options,  FLAG_COUNT,  *flag_index,  0,
               "Special flags for bootloader configuration.\n"
               "'esp' for UEFI, 'bios_grub' for BIOS+GPT.", 0 }
         };
@@ -176,10 +176,10 @@ static int run_partition_form(
         FormResult result = handle_form_key(key, fields, FIELD_COUNT, &focused);
 
         // Update indices from form fields after key handling.
-        *size_idx = fields[FIELD_SIZE].current;
-        *mount_idx = fields[FIELD_MOUNT].current;
-        *type_idx = fields[FIELD_TYPE].current;
-        *flag_idx = fields[FIELD_FLAGS].current;
+        *size_index = fields[FIELD_SIZE].current;
+        *mount_index = fields[FIELD_MOUNT].current;
+        *type_index = fields[FIELD_TYPE].current;
+        *flag_index = fields[FIELD_FLAGS].current;
 
         if (result == FORM_SUBMIT)
         {
@@ -305,15 +305,15 @@ int add_partition_dialog(
     format_disk_size(free_space, free_str, sizeof(free_str));
 
     // Initialize form field indices with defaults.
-    int size_idx = DEFAULT_SIZE_INDEX;
-    int mount_idx = 0;     // Default to /.
-    int type_idx = 0;      // Default to primary.
-    int flag_idx = 0;      // Default to none.
+    int size_index = DEFAULT_SIZE_INDEX;
+    int mount_index = 0;     // Default to /.
+    int type_index = 0;      // Default to primary.
+    int flag_index = 0;      // Default to none.
 
     // Run the partition form.
     if (!run_partition_form(
-        modal, "Add Partition", free_str, free_space, &size_idx,
-        &mount_idx, &type_idx, &flag_idx, "Add"
+        modal, "Add Partition", free_str, free_space, &size_index,
+        &mount_index, &type_index, &flag_index, "Add"
     ))
     {
         return 0;
@@ -321,7 +321,7 @@ int add_partition_dialog(
 
     // Create new partition, clamping size to free space and minimum.
     Partition new_partition = {0};
-    new_partition.size_bytes = size_presets[size_idx];
+    new_partition.size_bytes = size_presets[size_index];
     if (new_partition.size_bytes > free_space)
     {
         new_partition.size_bytes = free_space;
@@ -332,7 +332,7 @@ int add_partition_dialog(
     }
 
     // Set mount point and filesystem based on selection.
-    if (mount_idx == 4)
+    if (mount_index == 4)
     {
         snprintf(
             new_partition.mount_point,
@@ -341,7 +341,7 @@ int add_partition_dialog(
         );
         new_partition.filesystem = FS_SWAP;
     }
-    else if (mount_idx == 5)
+    else if (mount_index == 5)
     {
         snprintf(
             new_partition.mount_point,
@@ -354,16 +354,16 @@ int add_partition_dialog(
     {
         snprintf(
             new_partition.mount_point, sizeof(new_partition.mount_point),
-            "%s", mount_options[mount_idx]
+            "%s", mount_options[mount_index]
         );
         new_partition.filesystem = FS_EXT4;
     }
 
     // Set partition type and flags.
-    new_partition.type = (type_idx == 0) ? PART_PRIMARY : PART_LOGICAL;
-    new_partition.flag_boot = (flag_idx == 1);
-    new_partition.flag_esp = (flag_idx == 2);
-    new_partition.flag_bios_grub = (flag_idx == 3);
+    new_partition.type = (type_index == 0) ? PART_PRIMARY : PART_LOGICAL;
+    new_partition.flag_boot = (flag_index == 1);
+    new_partition.flag_esp = (flag_index == 2);
+    new_partition.flag_bios_grub = (flag_index == 3);
 
     // ESP partitions must be FAT32.
     if (new_partition.flag_esp)
@@ -407,10 +407,10 @@ int edit_partition_dialog(
     format_disk_size(free_space, free_str, sizeof(free_str));
 
     // Initialize form fields from current partition values.
-    int size_idx = find_closest_size_idx(p->size_bytes);
-    int mount_idx = find_mount_idx(p->mount_point);
-    int type_idx = (p->type == PART_PRIMARY) ? 0 : 1;
-    int flag_idx = find_flag_idx(p->flag_boot, p->flag_esp, p->flag_bios_grub);
+    int size_index = find_closest_size_index(p->size_bytes);
+    int mount_index = find_mount_index(p->mount_point);
+    int type_index = (p->type == PART_PRIMARY) ? 0 : 1;
+    int flag_index = find_flag_index(p->flag_boot, p->flag_esp, p->flag_bios_grub);
 
     // Build title with partition number.
     char title[32];
@@ -419,14 +419,14 @@ int edit_partition_dialog(
     // Run the partition form.
     if (!run_partition_form(
         modal, title, free_str, free_space,
-        &size_idx, &mount_idx, &type_idx, &flag_idx, "Save"
+        &size_index, &mount_index, &type_index, &flag_index, "Save"
     ))
     {
         return 0;
     }
 
     // Update partition size, clamping to free space and minimum.
-    p->size_bytes = size_presets[size_idx];
+    p->size_bytes = size_presets[size_index];
     if (p->size_bytes > free_space)
     {
         p->size_bytes = free_space;
@@ -437,12 +437,12 @@ int edit_partition_dialog(
     }
 
     // Update mount point and filesystem.
-    if (mount_idx == 4)
+    if (mount_index == 4)
     {
         snprintf(p->mount_point, sizeof(p->mount_point), "[swap]");
         p->filesystem = FS_SWAP;
     }
-    else if (mount_idx == 5)
+    else if (mount_index == 5)
     {
         snprintf(p->mount_point, sizeof(p->mount_point), "[none]");
         p->filesystem = FS_NONE;
@@ -452,16 +452,16 @@ int edit_partition_dialog(
         snprintf(
             p->mount_point, sizeof(p->mount_point),
             "%s",
-            mount_options[mount_idx]
+            mount_options[mount_index]
         );
         p->filesystem = FS_EXT4;
     }
 
     // Update partition type and flags.
-    p->type = (type_idx == 0) ? PART_PRIMARY : PART_LOGICAL;
-    p->flag_boot = (flag_idx == 1);
-    p->flag_esp = (flag_idx == 2);
-    p->flag_bios_grub = (flag_idx == 3);
+    p->type = (type_index == 0) ? PART_PRIMARY : PART_LOGICAL;
+    p->flag_boot = (flag_index == 1);
+    p->flag_esp = (flag_index == 2);
+    p->flag_bios_grub = (flag_index == 3);
 
     // ESP partitions must be FAT32.
     if (p->flag_esp)

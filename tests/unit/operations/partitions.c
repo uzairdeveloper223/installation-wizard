@@ -5,9 +5,7 @@
 
 #include "../../all.h"
 
-/**
- * Sets up the test environment before each test.
- */
+/** Sets up the test environment before each test. */
 static int setup(void **state)
 {
     (void)state;
@@ -17,9 +15,7 @@ static int setup(void **state)
     return 0;
 }
 
-/**
- * Cleans up the test environment after each test.
- */
+/** Cleans up the test environment after each test. */
 static int teardown(void **state)
 {
     (void)state;
@@ -55,9 +51,7 @@ static int read_dry_run_log(char lines[][512], int max_lines)
     return count;
 }
 
-/**
- * Helper to check if a command exists in the log (substring match).
- */
+/** Helper to check if a command exists in the log (substring match). */
 static int log_contains(char lines[][512], int count, const char *substring)
 {
     for (int i = 0; i < count; i++)
@@ -70,9 +64,7 @@ static int log_contains(char lines[][512], int count, const char *substring)
     return 0;
 }
 
-/**
- * Verifies create_partitions() creates GPT label on the disk.
- */
+/** Verifies create_partitions() creates GPT label on the disk. */
 static void test_create_partitions_creates_gpt_label(void **state)
 {
     (void)state;
@@ -99,9 +91,7 @@ static void test_create_partitions_creates_gpt_label(void **state)
     assert_string_equal("parted -s '/dev/sda' mklabel gpt >>" INSTALL_LOG_PATH " 2>&1", lines[0]);
 }
 
-/**
- * Verifies create_partitions() creates single partition with correct boundaries.
- */
+/** Verifies create_partitions() creates single partition with correct boundaries. */
 static void test_create_partitions_single_partition(void **state)
 {
     (void)state;
@@ -135,9 +125,7 @@ static void test_create_partitions_single_partition(void **state)
     assert_string_equal("mount '/dev/sda1' /mnt >>" INSTALL_LOG_PATH " 2>&1", lines[3]);
 }
 
-/**
- * Verifies create_partitions() creates multiple partitions with correct boundaries.
- */
+/** Verifies create_partitions() creates multiple partitions with correct boundaries. */
 static void test_create_partitions_multiple_partitions(void **state)
 {
     (void)state;
@@ -173,9 +161,7 @@ static void test_create_partitions_multiple_partitions(void **state)
     assert_string_equal("parted -s '/dev/sda' mkpart primary 513MiB 2561MiB >>" INSTALL_LOG_PATH " 2>&1", lines[2]);
 }
 
-/**
- * Verifies create_partitions() sets boot flag when requested.
- */
+/** Verifies create_partitions() sets boot flag when requested. */
 static void test_create_partitions_sets_boot_flag(void **state)
 {
     (void)state;
@@ -202,9 +188,7 @@ static void test_create_partitions_sets_boot_flag(void **state)
     assert_true(log_contains(lines, count, "parted -s '/dev/sda' set 1 boot on"));
 }
 
-/**
- * Verifies create_partitions() sets ESP flag when requested.
- */
+/** Verifies create_partitions() sets ESP flag when requested. */
 static void test_create_partitions_sets_esp_flag(void **state)
 {
     (void)state;
@@ -231,9 +215,7 @@ static void test_create_partitions_sets_esp_flag(void **state)
     assert_true(log_contains(lines, count, "parted -s '/dev/sda' set 1 esp on"));
 }
 
-/**
- * Verifies create_partitions() sets BIOS boot flag when requested.
- */
+/** Verifies create_partitions() sets BIOS boot flag when requested. */
 static void test_create_partitions_sets_bios_grub_flag(void **state)
 {
     (void)state;
@@ -268,9 +250,7 @@ static void test_create_partitions_sets_bios_grub_flag(void **state)
     assert_true(log_contains(lines, count, "parted -s '/dev/sda' set 1 bios_grub on"));
 }
 
-/**
- * Verifies create_partitions() formats swap partitions with mkswap.
- */
+/** Verifies create_partitions() formats swap partitions with mkswap. */
 static void test_create_partitions_formats_swap(void **state)
 {
     (void)state;
@@ -305,9 +285,7 @@ static void test_create_partitions_formats_swap(void **state)
     assert_true(log_contains(lines, count, "swapon '/dev/sda2'"));
 }
 
-/**
- * Verifies create_partitions() formats FAT32 partitions correctly.
- */
+/** Verifies create_partitions() formats FAT32 partitions correctly. */
 static void test_create_partitions_formats_fat32(void **state)
 {
     (void)state;
@@ -342,9 +320,7 @@ static void test_create_partitions_formats_fat32(void **state)
     assert_true(log_contains(lines, count, "mkfs.vfat -F 32 '/dev/sda1'"));
 }
 
-/**
- * Verifies create_partitions() handles NVMe device naming.
- */
+/** Verifies create_partitions() handles NVMe device naming. */
 static void test_create_partitions_nvme_naming(void **state)
 {
     (void)state;
@@ -370,9 +346,7 @@ static void test_create_partitions_nvme_naming(void **state)
     assert_true(log_contains(lines, count, "mkfs.ext4 -F '/dev/nvme0n1p1'"));
 }
 
-/**
- * Verifies create_partitions() mounts non-root partitions correctly.
- */
+/** Verifies create_partitions() mounts non-root partitions correctly. */
 static void test_create_partitions_mounts_nonroot(void **state)
 {
     (void)state;
@@ -407,9 +381,7 @@ static void test_create_partitions_mounts_nonroot(void **state)
     assert_true(log_contains(lines, count, "mount '/dev/sda2' '/mnt/home'"));
 }
 
-/**
- * Verifies create_partitions() fails when no root partition is defined.
- */
+/** Verifies create_partitions() fails when no root partition is defined. */
 static void test_create_partitions_fails_without_root(void **state)
 {
     (void)state;
@@ -431,9 +403,7 @@ static void test_create_partitions_fails_without_root(void **state)
     assert_int_equal(-6, result);
 }
 
-/**
- * Verifies create_partitions() fails with zero partitions (no root).
- */
+/** Verifies create_partitions() fails with zero partitions (no root). */
 static void test_create_partitions_empty_fails(void **state)
 {
     (void)state;

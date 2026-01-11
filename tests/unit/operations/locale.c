@@ -1,12 +1,8 @@
-/**
- * This code is responsible for testing the locale configuration module.
- */
+/** This code is responsible for testing the locale configuration module. */
 
 #include "../../all.h"
 
-/**
- * Sets up the test environment before each test.
- */
+/** Sets up the test environment before each test. */
 static int setup(void **state)
 {
     (void)state;
@@ -16,9 +12,7 @@ static int setup(void **state)
     return 0;
 }
 
-/**
- * Cleans up the test environment after each test.
- */
+/** Cleans up the test environment after each test. */
 static int teardown(void **state)
 {
     (void)state;
@@ -54,9 +48,7 @@ static int read_dry_run_log(char lines[][512], int max_lines)
     return count;
 }
 
-/**
- * Helper to check if a command exists in the log (substring match).
- */
+/** Helper to check if a command exists in the log (substring match). */
 static int log_contains(char lines[][512], int count, const char *substring)
 {
     for (int i = 0; i < count; i++)
@@ -69,9 +61,7 @@ static int log_contains(char lines[][512], int count, const char *substring)
     return 0;
 }
 
-/**
- * Verifies configure_locale() generates correct sed command for valid locale.
- */
+/** Verifies configure_locale() generates correct sed command for valid locale. */
 static void test_configure_locale_valid_locale(void **state)
 {
     (void)state;
@@ -99,9 +89,7 @@ static void test_configure_locale_valid_locale(void **state)
     assert_true(log_contains(lines, count, "echo 'LANG=en_US.UTF-8' > /mnt/etc/default/locale"));
 }
 
-/**
- * Verifies configure_locale() works with locale containing @ modifier.
- */
+/** Verifies configure_locale() works with locale containing @ modifier. */
 static void test_configure_locale_with_modifier(void **state)
 {
     (void)state;
@@ -121,9 +109,7 @@ static void test_configure_locale_with_modifier(void **state)
     assert_true(log_contains(lines, count, "sr_RS@latin"));
 }
 
-/**
- * Verifies configure_locale() rejects empty locale.
- */
+/** Verifies configure_locale() rejects empty locale. */
 static void test_configure_locale_empty_locale(void **state)
 {
     (void)state;
@@ -143,9 +129,7 @@ static void test_configure_locale_empty_locale(void **state)
     assert_int_equal(0, count);
 }
 
-/**
- * Verifies configure_locale() rejects locale without underscore.
- */
+/** Verifies configure_locale() rejects locale without underscore. */
 static void test_configure_locale_no_underscore(void **state)
 {
     (void)state;
@@ -160,9 +144,7 @@ static void test_configure_locale_no_underscore(void **state)
     assert_int_equal(-1, result);
 }
 
-/**
- * Verifies configure_locale() rejects overly long locale strings.
- */
+/** Verifies configure_locale() rejects overly long locale strings. */
 static void test_configure_locale_too_long(void **state)
 {
     (void)state;
@@ -179,9 +161,7 @@ static void test_configure_locale_too_long(void **state)
     assert_int_equal(-1, result);
 }
 
-/**
- * Verifies configure_locale() rejects shell injection attempts.
- */
+/** Verifies configure_locale() rejects shell injection attempts. */
 static void test_configure_locale_shell_injection(void **state)
 {
     (void)state;
@@ -198,9 +178,7 @@ static void test_configure_locale_shell_injection(void **state)
     assert_int_equal(-1, result);
 }
 
-/**
- * Verifies configure_locale() rejects locale with backticks.
- */
+/** Verifies configure_locale() rejects locale with backticks. */
 static void test_configure_locale_backtick_injection(void **state)
 {
     (void)state;
@@ -217,9 +195,7 @@ static void test_configure_locale_backtick_injection(void **state)
     assert_int_equal(-1, result);
 }
 
-/**
- * Verifies configure_locale() rejects locale with dollar sign.
- */
+/** Verifies configure_locale() rejects locale with dollar sign. */
 static void test_configure_locale_dollar_injection(void **state)
 {
     (void)state;
@@ -236,9 +212,7 @@ static void test_configure_locale_dollar_injection(void **state)
     assert_int_equal(-1, result);
 }
 
-/**
- * Verifies configure_locale() allows valid special characters.
- */
+/** Verifies configure_locale() allows valid special characters. */
 static void test_configure_locale_valid_special_chars(void **state)
 {
     (void)state;

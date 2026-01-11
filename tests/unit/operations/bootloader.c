@@ -1,12 +1,8 @@
-/**
- * This code is responsible for testing the bootloader setup module.
- */
+/** This code is responsible for testing the bootloader setup module. */
 
 #include "../../all.h"
 
-/**
- * Sets up the test environment before each test.
- */
+/** Sets up the test environment before each test. */
 static int setup(void **state)
 {
     (void)state;
@@ -16,9 +12,7 @@ static int setup(void **state)
     return 0;
 }
 
-/**
- * Cleans up the test environment after each test.
- */
+/** Cleans up the test environment after each test. */
 static int teardown(void **state)
 {
     (void)state;
@@ -54,9 +48,7 @@ static int read_dry_run_log(char lines[][512], int max_lines)
     return count;
 }
 
-/**
- * Helper to check if a command exists in the log (substring match).
- */
+/** Helper to check if a command exists in the log (substring match). */
 static int log_contains(char lines[][512], int count, const char *substring)
 {
     for (int i = 0; i < count; i++)
@@ -69,10 +61,7 @@ static int log_contains(char lines[][512], int count, const char *substring)
     return 0;
 }
 
-/**
- * Helper to find the index of a command in the log.
- * Returns -1 if not found.
- */
+/** Helper to find the index of a command in the log. Returns -1 if not found. */
 static int log_find_index(char lines[][512], int count, const char *substring)
 {
     for (int i = 0; i < count; i++)
@@ -85,9 +74,7 @@ static int log_find_index(char lines[][512], int count, const char *substring)
     return -1;
 }
 
-/**
- * Verifies setup_bootloader() binds mounts /dev, /proc, /sys.
- */
+/** Verifies setup_bootloader() binds mounts /dev, /proc, /sys. */
 static void test_setup_bootloader_bind_mounts(void **state)
 {
     (void)state;
@@ -117,9 +104,7 @@ static void test_setup_bootloader_bind_mounts(void **state)
     assert_true(log_contains(lines, count, "mount -t sysfs sys /mnt/sys"));
 }
 
-/**
- * Verifies setup_bootloader() verifies chroot works before proceeding.
- */
+/** Verifies setup_bootloader() verifies chroot works before proceeding. */
 static void test_setup_bootloader_verifies_chroot(void **state)
 {
     (void)state;
@@ -149,9 +134,7 @@ static void test_setup_bootloader_verifies_chroot(void **state)
     assert_true(log_contains(lines, count, "rm -f '/mnt/tmp/.chroot_verify'"));
 }
 
-/**
- * Verifies setup_bootloader() copies BIOS packages in BIOS mode.
- */
+/** Verifies setup_bootloader() copies BIOS packages in BIOS mode. */
 static void test_setup_bootloader_bios_copies_packages(void **state)
 {
     (void)state;
@@ -177,9 +160,7 @@ static void test_setup_bootloader_bios_copies_packages(void **state)
     assert_false(log_contains(lines, count, "/usr/share/limeos/packages/efi"));
 }
 
-/**
- * Verifies setup_bootloader() copies EFI packages in UEFI mode.
- */
+/** Verifies setup_bootloader() copies EFI packages in UEFI mode. */
 static void test_setup_bootloader_uefi_copies_packages(void **state)
 {
     (void)state;
@@ -213,9 +194,7 @@ static void test_setup_bootloader_uefi_copies_packages(void **state)
     assert_false(log_contains(lines, count, "/usr/share/limeos/packages/bios"));
 }
 
-/**
- * Verifies setup_bootloader() installs packages via dpkg in chroot.
- */
+/** Verifies setup_bootloader() installs packages via dpkg in chroot. */
 static void test_setup_bootloader_installs_packages(void **state)
 {
     (void)state;
@@ -242,9 +221,7 @@ static void test_setup_bootloader_installs_packages(void **state)
     assert_true(log_contains(lines, count, "rm -f /mnt/tmp/*.deb"));
 }
 
-/**
- * Verifies setup_bootloader() runs grub-install with disk path in BIOS mode.
- */
+/** Verifies setup_bootloader() runs grub-install with disk path in BIOS mode. */
 static void test_setup_bootloader_bios_grub_install(void **state)
 {
     (void)state;
@@ -271,9 +248,7 @@ static void test_setup_bootloader_bios_grub_install(void **state)
     assert_false(log_contains(lines, count, "--target=x86_64-efi"));
 }
 
-/**
- * Verifies setup_bootloader() runs grub-install with UEFI target in UEFI mode.
- */
+/** Verifies setup_bootloader() runs grub-install with UEFI target in UEFI mode. */
 static void test_setup_bootloader_uefi_grub_install(void **state)
 {
     (void)state;
@@ -307,9 +282,7 @@ static void test_setup_bootloader_uefi_grub_install(void **state)
     assert_true(log_contains(lines, count, "--efi-directory=/boot/efi"));
 }
 
-/**
- * Verifies setup_bootloader() runs update-grub.
- */
+/** Verifies setup_bootloader() runs update-grub. */
 static void test_setup_bootloader_runs_update_grub(void **state)
 {
     (void)state;
@@ -333,9 +306,7 @@ static void test_setup_bootloader_runs_update_grub(void **state)
     assert_true(log_contains(lines, count, "chroot /mnt /usr/sbin/update-grub"));
 }
 
-/**
- * Verifies setup_bootloader() executes commands in correct order.
- */
+/** Verifies setup_bootloader() executes commands in correct order. */
 static void test_setup_bootloader_command_order(void **state)
 {
     (void)state;
@@ -382,9 +353,7 @@ static void test_setup_bootloader_command_order(void **state)
     assert_true(idx_grub < idx_update);
 }
 
-/**
- * Verifies setup_bootloader() uses quoted disk path in BIOS mode.
- */
+/** Verifies setup_bootloader() uses quoted disk path in BIOS mode. */
 static void test_setup_bootloader_quotes_disk_path(void **state)
 {
     (void)state;
@@ -409,9 +378,7 @@ static void test_setup_bootloader_quotes_disk_path(void **state)
     assert_true(log_contains(lines, count, "grub-install '/dev/sda'"));
 }
 
-/**
- * Verifies setup_bootloader() handles NVMe disk names in BIOS mode.
- */
+/** Verifies setup_bootloader() handles NVMe disk names in BIOS mode. */
 static void test_setup_bootloader_nvme_disk(void **state)
 {
     (void)state;

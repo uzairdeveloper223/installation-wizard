@@ -1,12 +1,8 @@
-/**
- * This code is responsible for testing the rootfs extraction module.
- */
+/** This code is responsible for testing the rootfs extraction module. */
 
 #include "../../all.h"
 
-/**
- * Sets up the test environment before each test.
- */
+/** Sets up the test environment before each test. */
 static int setup(void **state)
 {
     (void)state;
@@ -16,9 +12,7 @@ static int setup(void **state)
     return 0;
 }
 
-/**
- * Cleans up the test environment after each test.
- */
+/** Cleans up the test environment after each test. */
 static int teardown(void **state)
 {
     (void)state;
@@ -54,9 +48,7 @@ static int read_dry_run_log(char lines[][512], int max_lines)
     return count;
 }
 
-/**
- * Helper to check if a command exists in the log (substring match).
- */
+/** Helper to check if a command exists in the log (substring match). */
 static int log_contains(char lines[][512], int count, const char *substring)
 {
     for (int i = 0; i < count; i++)
@@ -69,9 +61,7 @@ static int log_contains(char lines[][512], int count, const char *substring)
     return 0;
 }
 
-/**
- * Verifies extract_rootfs() generates correct tar command in dry-run mode.
- */
+/** Verifies extract_rootfs() generates correct tar command in dry-run mode. */
 static void test_extract_rootfs_generates_tar_command(void **state)
 {
     (void)state;
@@ -92,9 +82,7 @@ static void test_extract_rootfs_generates_tar_command(void **state)
     assert_true(log_contains(lines, count, "tar -xzf /usr/share/limeos/rootfs.tar.gz -C /mnt"));
 }
 
-/**
- * Verifies extract_rootfs() redirects output to install log.
- */
+/** Verifies extract_rootfs() redirects output to install log. */
 static void test_extract_rootfs_redirects_to_log(void **state)
 {
     (void)state;
@@ -113,9 +101,7 @@ static void test_extract_rootfs_redirects_to_log(void **state)
     assert_true(log_contains(lines, count, ">>" INSTALL_LOG_PATH " 2>&1"));
 }
 
-/**
- * Verifies extract_rootfs() skips file existence check in dry-run mode.
- */
+/** Verifies extract_rootfs() skips file existence check in dry-run mode. */
 static void test_extract_rootfs_skips_existence_check_in_dry_run(void **state)
 {
     (void)state;
@@ -136,9 +122,7 @@ static void test_extract_rootfs_skips_existence_check_in_dry_run(void **state)
     assert_true(count >= 1);
 }
 
-/**
- * Verifies extract_rootfs() uses correct tarball path.
- */
+/** Verifies extract_rootfs() uses correct tarball path. */
 static void test_extract_rootfs_uses_correct_path(void **state)
 {
     (void)state;
@@ -157,9 +141,7 @@ static void test_extract_rootfs_uses_correct_path(void **state)
     assert_true(log_contains(lines, count, "/usr/share/limeos/rootfs.tar.gz"));
 }
 
-/**
- * Verifies extract_rootfs() extracts to /mnt target.
- */
+/** Verifies extract_rootfs() extracts to /mnt target. */
 static void test_extract_rootfs_extracts_to_mnt(void **state)
 {
     (void)state;
@@ -178,9 +160,7 @@ static void test_extract_rootfs_extracts_to_mnt(void **state)
     assert_true(log_contains(lines, count, "-C /mnt"));
 }
 
-/**
- * Verifies extract_rootfs() uses gzip decompression flag.
- */
+/** Verifies extract_rootfs() uses gzip decompression flag. */
 static void test_extract_rootfs_uses_gzip(void **state)
 {
     (void)state;

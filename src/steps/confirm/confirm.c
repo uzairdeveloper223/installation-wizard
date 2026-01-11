@@ -5,7 +5,7 @@
 
 #include "../../all.h"
 
-static int has_root_partition(Store *store)
+semistatic int has_root_partition(Store *store)
 {
     for (int i = 0; i < store->partition_count; i++)
     {
@@ -17,7 +17,7 @@ static int has_root_partition(Store *store)
     return 0;
 }
 
-static int has_duplicate_mount_points(Store *store)
+semistatic int has_duplicate_mount_points(Store *store)
 {
     for (int i = 0; i < store->partition_count; i++)
     {
@@ -37,7 +37,7 @@ static int has_duplicate_mount_points(Store *store)
     return 0;
 }
 
-static int has_required_boot_partition(Store *store, int is_uefi)
+semistatic int has_required_boot_partition(Store *store, int is_uefi)
 {
     for (int i = 0; i < store->partition_count; i++)
     {
@@ -53,7 +53,7 @@ static int has_required_boot_partition(Store *store, int is_uefi)
     return 0;
 }
 
-static int is_boot_partition_too_small(Store *store, int is_uefi)
+semistatic int is_boot_partition_too_small(Store *store, int is_uefi)
 {
     for (int i = 0; i < store->partition_count; i++)
     {
