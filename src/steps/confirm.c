@@ -32,9 +32,6 @@ void set_install_poll_modal(void *modal)
     poll_modal = (WINDOW *)modal;
 }
 
-/**
- * Renders the last lines of the install log on stdscr behind the modal.
- */
 static void render_background_logs(WINDOW *modal)
 {
     int screen_height, screen_width;
@@ -63,9 +60,6 @@ static void render_background_logs(WINDOW *modal)
     doupdate();
 }
 
-/**
- * Clears the background (stdscr) when logs are hidden.
- */
 static void clear_background_logs(WINDOW *modal)
 {
     werase(stdscr);
@@ -75,10 +69,6 @@ static void clear_background_logs(WINDOW *modal)
     doupdate();
 }
 
-/**
- * Checks for backtick key input and toggles logs visibility.
- * Uses non-blocking input.
- */
 static void check_toggle_input(WINDOW *modal)
 {
     timeout(0); // Non-blocking.
@@ -312,8 +302,8 @@ static int is_boot_partition_too_small(Store *store, int is_uefi)
         }
         if (!is_uefi && store->partitions[i].flag_bios_grub)
         {
-            // BIOS GRUB partition must be at least 128MB.
-            return store->partitions[i].size_bytes < 128ULL * 1000000;
+            // BIOS GRUB partition must be at least 2MB.
+            return store->partitions[i].size_bytes < 2ULL * 1000000;
         }
     }
     return 0;
@@ -399,8 +389,8 @@ static void render_boot_too_small_error(WINDOW *modal, int is_uefi)
     else
     {
         render_error(modal, 10, 3,
-            "BIOS GRUB partition must be at least 128MB.\n"
-            "512MB is recommended. Go back and resize it."
+            "BIOS GRUB partition must be at least 2MB.\n"
+            "Go back and resize it."
         );
     }
     const char *footer[] = {"[Esc] Back", NULL};
