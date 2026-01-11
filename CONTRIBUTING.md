@@ -66,7 +66,8 @@ run:
 sudo apt install \
     gcc \
     make \
-    libncurses-dev
+    libncurses-dev \
+    libcmocka-dev
 ```
 
 If you’re not using a Debian-based distribution, package names may differ.
@@ -113,18 +114,7 @@ This subsection explains how to run the unit test suite. The tests do not modify
 disks/partitions or require root privileges; they only build and run in user
 space, and are thus safe to run on any machine.
 
-First, ensure the cmocka testing library is installed. For Debian-based Linux
-distributions, run:
-
-```bash
-sudo apt install libcmocka-dev
-```
-
-If you’re not using a Debian-based distribution, package names may differ.
-In that case, consult your distribution’s package repositories
-(package listings) to find the correct package names for your system.
-
-Then, run the test suite:
+First, run the test suite:
 
 ```bash
 make test
