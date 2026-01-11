@@ -76,22 +76,36 @@ int run_confirmation_step(WINDOW *modal)
 
     // Check for required boot partition based on boot mode.
     int has_boot_partition = 0;
+    int boot_partition_too_small = 0;
     for (int i = 0; i < store->partition_count; i++)
     {
         if (is_uefi && store->partitions[i].flag_esp)
         {
             has_boot_partition = 1;
+
+            // Check if ESP is at least 512MB.
+            if (store->partitions[i].size_bytes < 512ULL * 1000000)
+            {
+                boot_partition_too_small = 1;
+            }
             break;
         }
         if (!is_uefi && store->partitions[i].flag_bios_grub)
         {
             has_boot_partition = 1;
+
+            // Check if BIOS GRUB partition is at least 128MB.
+            if (store->partitions[i].size_bytes < 128ULL * 1000000)
+            {
+                boot_partition_too_small = 1;
+            }
             break;
         }
     }
 
     // Determine if installation can proceed.
-    int can_install = has_root && !has_duplicate && has_boot_partition;
+    int can_install = has_root && !has_duplicate && has_boot_partition
+        && !boot_partition_too_small;
 
     // Render the appropriate message based on validation.
     if (has_duplicate)
@@ -133,6 +147,28 @@ int run_confirmation_step(WINDOW *modal)
             render_error(modal, 10, 3,
                 "GPT on BIOS requires a BIOS Boot Partition.\n"
                 "Add: Size=8MB, Mount=none, Flags=bios_grub"
+            );
+        }
+
+        // Display navigation footer without install option.
+        const char *footer[] = {"[Esc] Back", NULL};
+        render_footer(modal, footer);
+    }
+    else if (boot_partition_too_small)
+    {
+        // Display error about insufficient boot partition size.
+        if (is_uefi)
+        {
+            render_error(modal, 10, 3,
+                "EFI System Partition must be at least 512MB.\n"
+                "Go back and resize it."
+            );
+        }
+        else
+        {
+            render_error(modal, 10, 3,
+                "BIOS GRUB partition must be at least 128MB.\n"
+                "512MB is recommended. Go back and resize it."
             );
         }
 
