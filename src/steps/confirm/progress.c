@@ -13,6 +13,7 @@ static const char *get_install_step_name(InstallStep step)
         case STEP_ROOTFS:     return "Extracting system files";
         case STEP_BOOTLOADER: return "Installing bootloader";
         case STEP_LOCALE:     return "Configuring locale";
+        case STEP_USERS:      return "Configuring users";
         default:              return "Processing";
     }
 }
@@ -111,6 +112,7 @@ static int get_step_row(InstallStep step)
         case STEP_ROOTFS:     return 5;
         case STEP_BOOTLOADER: return 6;
         case STEP_LOCALE:     return 7;
+        case STEP_USERS:      return 8;
         default:              return 4;
     }
 }
@@ -165,7 +167,7 @@ static void render_step_line(
 
 static void await_reboot_with_logs(WINDOW *modal)
 {
-    mvwprintw(modal, 10, 3, "Press Enter to reboot...");
+    mvwprintw(modal, 11, 3, "Press Enter to reboot...");
     wrefresh(modal);
 
     while (1)
@@ -221,7 +223,7 @@ void ncurses_install_progress(
             break;
 
         case INSTALL_COMPLETE:
-            mvwprintw(modal, 9, 3, "Installation complete!");
+            mvwprintw(modal, 10, 3, "Installation complete!");
             break;
 
         case INSTALL_AWAIT_REBOOT:

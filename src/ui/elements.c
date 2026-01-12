@@ -491,3 +491,78 @@ void render_footer(WINDOW *modal, const char **items)
         }
     }
 }
+
+void render_action_menu(
+    WINDOW *window, int y, int x,
+    const StepOption *actions, int count, int selected
+)
+{
+    // Render each action item in the menu.
+    for (int i = 0; i < count; i++)
+    {
+        // Apply highlight styling if this action is selected.
+        if (i == selected)
+        {
+            wattron(window, A_REVERSE);
+        }
+
+        // Print the action label with padding.
+        mvwprintw(window, y, x, " %s ", actions[i].label);
+
+        // Remove highlight styling after printing.
+        if (i == selected)
+        {
+            wattroff(window, A_REVERSE);
+        }
+
+        // Advance x position for next action.
+        x += strlen(actions[i].label) + 3;
+    }
+}
+
+int adjust_scroll_offset(int *out_scroll_offset, int item_count, int max_visible)
+{
+    // Adjust scroll offset if items were removed.
+    if (*out_scroll_offset > 0 && *out_scroll_offset >= item_count)
+    {
+        if (item_count > 0)
+        {
+            *out_scroll_offset = item_count - 1;
+        }
+        else
+        {
+            *out_scroll_offset = 0;
+        }
+    }
+
+    // Calculate maximum scroll offset.
+    int max_scroll = 0;
+    if (item_count > max_visible)
+    {
+        max_scroll = item_count - max_visible;
+    }
+    if (*out_scroll_offset > max_scroll)
+    {
+        *out_scroll_offset = max_scroll;
+    }
+
+    return max_scroll;
+}
+
+void show_error_dialog(WINDOW *modal, const char *title, const char *message)
+{
+    // Clear modal and render dialog title.
+    clear_modal(modal);
+    wattron(modal, A_BOLD);
+    mvwprintw(modal, 2, 3, "%s", title);
+    wattroff(modal, A_BOLD);
+
+    // Render error message and footer.
+    render_error(modal, 5, 3, message);
+    const char *footer[] = { "[Enter] OK", NULL };
+    render_footer(modal, footer);
+    wrefresh(modal);
+
+    // Wait for Enter key.
+    while (getch() != '\n');
+}

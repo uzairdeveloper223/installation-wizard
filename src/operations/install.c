@@ -68,6 +68,18 @@ int run_install(install_progress_cb progress_cb, void *context)
     }
     NOTIFY(INSTALL_STEP_OK, STEP_LOCALE, 0);
 
+    // Step 5: Configure user accounts and hostname.
+    write_install_log_header("Configuring users");
+    NOTIFY(INSTALL_STEP_BEGIN, STEP_USERS, 0);
+    result = configure_users();
+    if (result != 0)
+    {
+        NOTIFY(INSTALL_STEP_FAIL, STEP_USERS, result);
+        cleanup_mounts();
+        return -5;
+    }
+    NOTIFY(INSTALL_STEP_OK, STEP_USERS, 0);
+
     // Cleanup.
     close_dry_run_log();
     cleanup_mounts();

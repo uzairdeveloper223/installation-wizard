@@ -114,7 +114,7 @@ semistatic int find_flag_index(int boot, int esp, int bios_grub)
 }
 
 static int run_partition_form(
-    WINDOW *modal, const char *title, const char *free_str,
+    WINDOW *modal, const char *title, const char *free_string,
     unsigned long long free_space,
     int *size_index, int *mount_index, int *type_index, int *flag_index,
     const char *footer_action
@@ -157,16 +157,16 @@ static int run_partition_form(
         wattroff(modal, A_BOLD);
 
         // Display free space indicator.
-        print_dim(modal, 2, 3 + strlen(title) + 1, "(%s free)", free_str);
+        print_dim(modal, 2, 3 + strlen(title) + 1, "(%s free)", free_string);
 
         // Render the form.
         render_form(modal, 4, 3, 11, fields, FIELD_COUNT, focused);
 
         // Render footer and refresh display.
-        char action_str[32];
-        snprintf(action_str, sizeof(action_str), "[Enter] %s", footer_action);
+        char action_string[32];
+        snprintf(action_string, sizeof(action_string), "[Enter] %s", footer_action);
         const char *footer[] = {
-            "[Arrows] Navigate", action_str, "[Esc] Cancel", NULL
+            "[Arrows] Navigate", action_string, "[Esc] Cancel", NULL
         };
         render_footer(modal, footer);
         wrefresh(modal);
@@ -261,19 +261,9 @@ int add_partition_dialog(
     // Check if maximum partition count has been reached.
     if (store->partition_count >= STORE_MAX_PARTITIONS)
     {
-        // Display error message to inform user of partition limit.
-        clear_modal(modal);
-        wattron(modal, A_BOLD);
-        mvwprintw(modal, 2, 3, "Add Partition");
-        wattroff(modal, A_BOLD);
-        render_error(modal, 5, 3, "Maximum partition limit reached.\n"
+        show_error_dialog(modal, "Add Partition",
+            "Maximum partition limit reached.\n"
             "Remove a partition before adding a new one.");
-        const char *footer[] = { "[Enter] OK", NULL };
-        render_footer(modal, footer);
-        wrefresh(modal);
-
-        // Wait for user to acknowledge the error.
-        while (getch() != '\n');
         return 0;
     }
 
@@ -285,24 +275,14 @@ int add_partition_dialog(
     // Check if free space is below minimum partition size.
     if (free_space < MIN_PARTITION_SIZE)
     {
-        // Display error message to inform user of insufficient space.
-        clear_modal(modal);
-        wattron(modal, A_BOLD);
-        mvwprintw(modal, 2, 3, "Add Partition");
-        wattroff(modal, A_BOLD);
-        render_error(modal, 5, 3, "Insufficient free space on disk.\n"
+        show_error_dialog(modal, "Add Partition",
+            "Insufficient free space on disk.\n"
             "Remove or resize a partition to continue.");
-        const char *footer[] = { "[Enter] OK", NULL };
-        render_footer(modal, footer);
-        wrefresh(modal);
-
-        // Wait for user to acknowledge the error.
-        while (getch() != '\n');
         return 0;
     }
 
-    char free_str[32];
-    format_disk_size(free_space, free_str, sizeof(free_str));
+    char free_string[32];
+    format_disk_size(free_space, free_string, sizeof(free_string));
 
     // Initialize form field indices with defaults.
     int size_index = DEFAULT_SIZE_INDEX;
@@ -312,7 +292,7 @@ int add_partition_dialog(
 
     // Run the partition form.
     if (!run_partition_form(
-        modal, "Add Partition", free_str, free_space, &size_index,
+        modal, "Add Partition", free_string, free_space, &size_index,
         &mount_index, &type_index, &flag_index, "Add"
     ))
     {
@@ -403,8 +383,8 @@ int edit_partition_dialog(
         store->partitions, store->partition_count
     ) - p->size_bytes;
     unsigned long long free_space = disk_size - other_used;
-    char free_str[32];
-    format_disk_size(free_space, free_str, sizeof(free_str));
+    char free_string[32];
+    format_disk_size(free_space, free_string, sizeof(free_string));
 
     // Initialize form fields from current partition values.
     int size_index = find_closest_size_index(p->size_bytes);
@@ -418,7 +398,7 @@ int edit_partition_dialog(
 
     // Run the partition form.
     if (!run_partition_form(
-        modal, title, free_str, free_space,
+        modal, title, free_string, free_space,
         &size_index, &mount_index, &type_index, &flag_index, "Save"
     ))
     {

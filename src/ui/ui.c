@@ -39,6 +39,7 @@ void initialize_ui(void)
             init_color(CUSTOM_COLOR_BLUE,          118, 565, 1000);
             init_color(CUSTOM_COLOR_ORANGE,        900, 400, 0);
             init_color(CUSTOM_COLOR_RED,           900, 200, 200);
+            init_color(CUSTOM_COLOR_PURPLE,        600, 300, 900);
 
             // Initialize color pairs with custom colors.
             init_pair(CUSTOM_COLOR_PAIR_MAIN, COLOR_BLACK, COLOR_WHITE);
@@ -52,6 +53,8 @@ void initialize_ui(void)
             init_pair(CUSTOM_COLOR_PAIR_INFO_NOTE, CUSTOM_COLOR_BLUE, CUSTOM_COLOR_ROW_EVEN_BG);
             init_pair(CUSTOM_COLOR_PAIR_WARNING_NOTE, CUSTOM_COLOR_ORANGE, CUSTOM_COLOR_ROW_EVEN_BG);
             init_pair(CUSTOM_COLOR_PAIR_ERROR_NOTE, CUSTOM_COLOR_RED, CUSTOM_COLOR_ROW_EVEN_BG);
+            init_pair(CUSTOM_COLOR_PAIR_PRIMARY_ODD, CUSTOM_COLOR_PURPLE, CUSTOM_COLOR_ROW_ODD_BG);
+            init_pair(CUSTOM_COLOR_PAIR_PRIMARY_EVEN, CUSTOM_COLOR_PURPLE, CUSTOM_COLOR_ROW_EVEN_BG);
         }
         else
         {
@@ -67,6 +70,8 @@ void initialize_ui(void)
             init_pair(CUSTOM_COLOR_PAIR_INFO_NOTE, COLOR_BLUE, COLOR_WHITE);
             init_pair(CUSTOM_COLOR_PAIR_WARNING_NOTE, COLOR_YELLOW, COLOR_WHITE);
             init_pair(CUSTOM_COLOR_PAIR_ERROR_NOTE, COLOR_RED, COLOR_WHITE);
+            init_pair(CUSTOM_COLOR_PAIR_PRIMARY_ODD, COLOR_MAGENTA, COLOR_WHITE);
+            init_pair(CUSTOM_COLOR_PAIR_PRIMARY_EVEN, COLOR_MAGENTA, COLOR_WHITE);
         }
     }
 

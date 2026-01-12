@@ -33,24 +33,24 @@ void render_partition_table(
     int scroll_offset
 )
 {
-    char size_str[32];
-    char disk_size_str[32];
-    char free_str[32];
+    char size_string[32];
+    char disk_size_string[32];
+    char free_string[32];
 
     // Format disk size and free space strings.
-    format_disk_size(disk_size, disk_size_str, sizeof(disk_size_str));
+    format_disk_size(disk_size, disk_size_string, sizeof(disk_size_string));
     unsigned long long used = sum_partition_sizes(
         store->partitions, store->partition_count
     );
     unsigned long long free_space = (disk_size > used) ? disk_size - used : 0;
-    format_disk_size(free_space, free_str, sizeof(free_str));
+    format_disk_size(free_space, free_string, sizeof(free_string));
 
     // Display header with disk info and free space.
     mvwprintw(
         modal,
         4, 3,
         "%s (%s, %s free)",
-        store->disk, disk_size_str, free_str
+        store->disk, disk_size_string, free_string
     );
 
     // Calculate the table width, reducing by 1 if scrollbar is needed.
@@ -88,7 +88,7 @@ void render_partition_table(
         {
             // Format partition data for display.
             Partition *p = &store->partitions[part_index];
-            format_disk_size(p->size_bytes, size_str, sizeof(size_str));
+            format_disk_size(p->size_bytes, size_string, sizeof(size_string));
 
             // Build flags string from partition flags.
             char flags[24] = "";
@@ -112,7 +112,7 @@ void render_partition_table(
                 row, sizeof(row),
                 " %-*d %-*s %-*s %-*s %-*s %-*s",
                 COL_WIDTH_NUM, part_index + 1,
-                COL_WIDTH_SIZE, size_str,
+                COL_WIDTH_SIZE, size_string,
                 COL_WIDTH_MOUNT, mount,
                 COL_WIDTH_FS, fs_to_string(p->filesystem),
                 COL_WIDTH_TYPE, type_to_string(p->type),

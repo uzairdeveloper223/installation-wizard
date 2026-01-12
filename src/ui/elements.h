@@ -198,3 +198,38 @@ void render_error(WINDOW *window, int y, int x, const char *text);
  * @param items NULL-terminated array of strings.
  */
 void render_footer(WINDOW *modal, const char **items);
+
+/**
+ * Renders a horizontal action menu with selection highlighting.
+ *
+ * @param window The ncurses window to draw in.
+ * @param y Y coordinate for the menu.
+ * @param x Starting X coordinate.
+ * @param actions Array of action options.
+ * @param count Number of actions.
+ * @param selected Index of selected action.
+ */
+void render_action_menu(
+    WINDOW *window, int y, int x,
+    const StepOption *actions, int count, int selected
+);
+
+/**
+ * Adjusts scroll offset to keep it within valid bounds.
+ *
+ * @param out_scroll_offset Pointer to scroll offset (will be modified).
+ * @param item_count Total number of items.
+ * @param max_visible Maximum visible items.
+ *
+ * @return The computed max_scroll value.
+ */
+int adjust_scroll_offset(int *out_scroll_offset, int item_count, int max_visible);
+
+/**
+ * Shows an error dialog with a title and message, waiting for Enter.
+ *
+ * @param modal The modal window to display in.
+ * @param title The dialog title.
+ * @param message The error message (can contain newlines).
+ */
+void show_error_dialog(WINDOW *modal, const char *title, const char *message);

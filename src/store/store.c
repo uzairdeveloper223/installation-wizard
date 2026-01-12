@@ -10,6 +10,9 @@ static Store store = {
     .dry_run = 0,
     .force_uefi = 0,
     .locale = "",
+    .hostname = "",
+    .users = {{0}},
+    .user_count = 0,
     .disk = "",
     .partitions = {{0}},
     .partition_count = 0
@@ -30,6 +33,19 @@ void reset_store(void)
     // Clear user selection strings.
     store.locale[0] = '\0';
     store.disk[0] = '\0';
+
+    // Initialize default hostname based on chassis type.
+    snprintf(
+        store.hostname, sizeof(store.hostname),
+        "user-%s", get_default_hostname_suffix()
+    );
+
+    // Initialize default user.
+    memset(store.users, 0, sizeof(store.users));
+    snprintf(store.users[0].username, sizeof(store.users[0].username), "user");
+    snprintf(store.users[0].password, sizeof(store.users[0].password), "password");
+    store.users[0].is_admin = 1;
+    store.user_count = 1;
 
     // Clear partition configuration.
     memset(store.partitions, 0, sizeof(store.partitions));

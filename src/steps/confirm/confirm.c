@@ -75,22 +75,26 @@ static void render_config_summary(WINDOW *modal, Store *store)
 {
     // Display summary of selected options.
     mvwprintw(modal, 4, 3, "Ready to install LimeOS with the following settings:");
-    mvwprintw(modal, 6, 3, "  Locale: %s", store->locale);
+    mvwprintw(modal, 5, 3, "  Locale: %s", store->locale);
+    mvwprintw(
+        modal, 6, 3, "  User: %s (%s, %d total)",
+        store->users[0].username, store->hostname, store->user_count
+    );
     mvwprintw(modal, 7, 3, "  Disk: %s", store->disk);
 
     // Display partition summary.
     unsigned long long disk_size = get_disk_size(store->disk);
     unsigned long long used = sum_partition_sizes(store->partitions, store->partition_count);
     unsigned long long free_space = (disk_size > used) ? disk_size - used : 0;
-    char free_str[32];
-    format_disk_size(free_space, free_str, sizeof(free_str));
+    char free_string[32];
+    format_disk_size(free_space, free_string, sizeof(free_string));
 
     if (store->partition_count > 0)
     {
         mvwprintw(
             modal, 8, 3,
             "  Partitions: %d partitions, %s left",
-            store->partition_count, free_str
+            store->partition_count, free_string
         );
     }
     else
@@ -189,7 +193,7 @@ int run_confirmation_step(WINDOW *modal)
     // Clear and draw step header.
     clear_modal(modal);
     wattron(modal, A_BOLD | COLOR_PAIR(CUSTOM_COLOR_PAIR_MAIN));
-    mvwprintw(modal, 2, 3, "Step 4: Confirm Installation");
+    mvwprintw(modal, 2, 3, "Step 5: Confirm Installation");
     wattroff(modal, A_BOLD);
 
     // Render configuration summary.

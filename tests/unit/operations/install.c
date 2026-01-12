@@ -136,8 +136,8 @@ static void test_run_install_sends_step_begin_events(void **state)
     run_install(test_progress_cb, NULL);
     close_dry_run_log();
 
-    // Should have at least: START, 4x(BEGIN+OK), COMPLETE, AWAIT_REBOOT.
-    assert_true(callback_count >= 11);
+    // Should have at least: START, 5x(BEGIN+OK), COMPLETE, AWAIT_REBOOT.
+    assert_true(callback_count >= 13);
 
     // At minimum, verify multiple STEP_BEGIN events occurred.
     int begin_count = 0;
@@ -148,7 +148,7 @@ static void test_run_install_sends_step_begin_events(void **state)
             begin_count++;
         }
     }
-    assert_int_equal(4, begin_count);
+    assert_int_equal(5, begin_count);
 }
 
 /** Verifies run_install() sends INSTALL_COMPLETE on success. */

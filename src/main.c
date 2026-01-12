@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     // A loop that runs throughout the entire wizard process and waits for user
     // input at each step, allowing back-and-forth navigation between steps.
     int step = 1;
-    while (step <= 4)
+    while (step <= 5)
     {
         int result = 0;
 
@@ -81,12 +81,15 @@ int main(int argc, char *argv[])
                 result = run_locale_step(modal);
                 break;
             case 2:
-                result = run_disk_step(modal);
+                result = run_user_step(modal);
                 break;
             case 3:
-                result = run_partition_step(modal);
+                result = run_disk_step(modal);
                 break;
             case 4:
+                result = run_partition_step(modal);
+                break;
+            case 5:
                 result = run_confirmation_step(modal);
                 break;
         }

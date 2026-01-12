@@ -107,7 +107,7 @@ int run_disk_step(WINDOW *modal)
     int result = run_selection_step(
         modal,                                      // Modal window.
         "Disk Selection",                           // Step title.
-        2,                                          // Step ID.
+        3,                                          // Step ID.
         "Select the target disk for installation:", // Step prompt.
         options,                                    // Options array.
         count,                                      // Number of options.
