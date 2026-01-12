@@ -6,6 +6,11 @@
 
 #include "../../../all.h"
 
+/** Minimum sizes for boot-related partitions (matching confirm.c). */
+#define ESP_MIN_SIZE_BYTES      (100ULL * 1000000)
+#define BIOS_GRUB_MIN_SIZE_BYTES (1ULL * 1000000)
+#define BOOT_PART_MIN_SIZE_BYTES (300ULL * 1000000)
+
 /** Sets up the test environment before each test. */
 static int setup(void **state)
 {
@@ -160,8 +165,8 @@ static void test_has_duplicate_mount_points_mixed(void **state)
     assert_int_equal(1, result);
 }
 
-/** Verifies has_required_boot_partition() returns 0 when no ESP in UEFI mode. */
-static void test_has_required_boot_partition_no_esp_uefi(void **state)
+/** Verifies validate_uefi_boot() returns error when no ESP exists. */
+static void test_validate_uefi_boot_no_esp(void **state)
 {
     (void)state;
     Store *store = get_store();
@@ -169,208 +174,355 @@ static void test_has_required_boot_partition_no_esp_uefi(void **state)
     strncpy(store->partitions[0].mount_point, "/", STORE_MAX_MOUNT_LEN);
     store->partitions[0].flag_esp = 0;
 
-    int result = has_required_boot_partition(store, 1);
+    BootValidationError result = validate_uefi_boot(store);
 
-    assert_int_equal(0, result);
+    assert_int_equal(BOOT_ERR_UEFI_NO_ESP, result);
 }
 
-/** Verifies has_required_boot_partition() returns 1 when ESP exists in UEFI. */
-static void test_has_required_boot_partition_has_esp_uefi(void **state)
+/** Verifies validate_uefi_boot() returns OK with valid ESP. */
+static void test_validate_uefi_boot_valid_esp(void **state)
 {
     (void)state;
     Store *store = get_store();
     store->partition_count = 2;
+    store->partitions[0].flag_esp = 1;
+    store->partitions[0].filesystem = FS_FAT32;
+    store->partitions[0].size_bytes = ESP_MIN_SIZE_BYTES;
     strncpy(store->partitions[0].mount_point, "/boot/efi", STORE_MAX_MOUNT_LEN);
-    store->partitions[0].flag_esp = 1;
     strncpy(store->partitions[1].mount_point, "/", STORE_MAX_MOUNT_LEN);
 
-    int result = has_required_boot_partition(store, 1);
+    BootValidationError result = validate_uefi_boot(store);
 
-    assert_int_equal(1, result);
+    assert_int_equal(BOOT_OK, result);
 }
 
-/** Verifies has_required_boot_partition() returns 0 when no BIOS boot in BIOS. */
-static void test_has_required_boot_partition_no_bios_grub(void **state)
+/** Verifies validate_uefi_boot() returns error if ESP not FAT32. */
+static void test_validate_uefi_boot_esp_not_fat32(void **state)
 {
     (void)state;
     Store *store = get_store();
     store->partition_count = 1;
-    strncpy(store->partitions[0].mount_point, "/", STORE_MAX_MOUNT_LEN);
-    store->partitions[0].flag_bios_grub = 0;
+    store->partitions[0].flag_esp = 1;
+    store->partitions[0].filesystem = FS_EXT4;
+    store->partitions[0].size_bytes = ESP_MIN_SIZE_BYTES;
+    strncpy(store->partitions[0].mount_point, "/boot/efi", STORE_MAX_MOUNT_LEN);
 
-    int result = has_required_boot_partition(store, 0);
+    BootValidationError result = validate_uefi_boot(store);
 
-    assert_int_equal(0, result);
+    assert_int_equal(BOOT_ERR_UEFI_ESP_NOT_FAT32, result);
 }
 
-/** Verifies has_required_boot_partition() returns 1 when BIOS boot exists. */
-static void test_has_required_boot_partition_has_bios_grub(void **state)
+/** Verifies validate_uefi_boot() returns error if ESP wrong mount. */
+static void test_validate_uefi_boot_esp_wrong_mount(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    store->partitions[0].flag_esp = 1;
+    store->partitions[0].filesystem = FS_FAT32;
+    store->partitions[0].size_bytes = ESP_MIN_SIZE_BYTES;
+    strncpy(store->partitions[0].mount_point, "/boot", STORE_MAX_MOUNT_LEN);
+
+    BootValidationError result = validate_uefi_boot(store);
+
+    assert_int_equal(BOOT_ERR_UEFI_ESP_WRONG_MOUNT, result);
+}
+
+/** Verifies validate_uefi_boot() returns error if ESP too small. */
+static void test_validate_uefi_boot_esp_too_small(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    store->partitions[0].flag_esp = 1;
+    store->partitions[0].filesystem = FS_FAT32;
+    store->partitions[0].size_bytes = ESP_MIN_SIZE_BYTES - 1;
+    strncpy(store->partitions[0].mount_point, "/boot/efi", STORE_MAX_MOUNT_LEN);
+
+    BootValidationError result = validate_uefi_boot(store);
+
+    assert_int_equal(BOOT_ERR_UEFI_ESP_TOO_SMALL, result);
+}
+
+/** Verifies validate_uefi_boot() returns error if bios_grub present. */
+static void test_validate_uefi_boot_has_bios_grub(void **state)
 {
     (void)state;
     Store *store = get_store();
     store->partition_count = 2;
-    strncpy(store->partitions[0].mount_point, "[none]", STORE_MAX_MOUNT_LEN);
     store->partitions[0].flag_bios_grub = 1;
-    strncpy(store->partitions[1].mount_point, "/", STORE_MAX_MOUNT_LEN);
+    store->partitions[1].flag_esp = 1;
+    store->partitions[1].filesystem = FS_FAT32;
+    store->partitions[1].size_bytes = ESP_MIN_SIZE_BYTES;
+    strncpy(store->partitions[1].mount_point, "/boot/efi", STORE_MAX_MOUNT_LEN);
 
-    int result = has_required_boot_partition(store, 0);
+    BootValidationError result = validate_uefi_boot(store);
 
-    assert_int_equal(1, result);
+    assert_int_equal(BOOT_ERR_UEFI_HAS_BIOS_GRUB, result);
 }
 
-/** Verifies ESP flag is ignored in BIOS mode. */
-static void test_has_required_boot_partition_esp_ignored_bios(void **state)
-{
-    (void)state;
-    Store *store = get_store();
-    store->partition_count = 1;
-    store->partitions[0].flag_esp = 1;
-    store->partitions[0].flag_bios_grub = 0;
-
-    int result = has_required_boot_partition(store, 0);
-
-    assert_int_equal(0, result);
-}
-
-/** Verifies BIOS boot flag is ignored in UEFI mode. */
-static void test_has_required_boot_partition_bios_ignored_uefi(void **state)
-{
-    (void)state;
-    Store *store = get_store();
-    store->partition_count = 1;
-    store->partitions[0].flag_esp = 0;
-    store->partitions[0].flag_bios_grub = 1;
-
-    int result = has_required_boot_partition(store, 1);
-
-    assert_int_equal(0, result);
-}
-
-/** Verifies is_boot_partition_too_small() returns 0 when ESP is large enough. */
-static void test_is_boot_partition_too_small_esp_ok(void **state)
-{
-    (void)state;
-    Store *store = get_store();
-    store->partition_count = 1;
-    store->partitions[0].flag_esp = 1;
-    store->partitions[0].size_bytes = 512ULL * 1000000; /* 512MB */
-
-    int result = is_boot_partition_too_small(store, 1);
-
-    assert_int_equal(0, result);
-}
-
-/** Verifies is_boot_partition_too_small() returns 1 when ESP is too small. */
-static void test_is_boot_partition_too_small_esp_too_small(void **state)
-{
-    (void)state;
-    Store *store = get_store();
-    store->partition_count = 1;
-    store->partitions[0].flag_esp = 1;
-    store->partitions[0].size_bytes = 256ULL * 1000000; /* 256MB */
-
-    int result = is_boot_partition_too_small(store, 1);
-
-    assert_int_equal(1, result);
-}
-
-/** Verifies is_boot_partition_too_small() returns 0 when BIOS boot is large. */
-static void test_is_boot_partition_too_small_bios_ok(void **state)
-{
-    (void)state;
-    Store *store = get_store();
-    store->partition_count = 1;
-    store->partitions[0].flag_bios_grub = 1;
-    store->partitions[0].size_bytes = 8ULL * 1000000; /* 8MB */
-
-    int result = is_boot_partition_too_small(store, 0);
-
-    assert_int_equal(0, result);
-}
-
-/** Verifies is_boot_partition_too_small() returns 1 when BIOS boot too small. */
-static void test_is_boot_partition_too_small_bios_too_small(void **state)
-{
-    (void)state;
-    Store *store = get_store();
-    store->partition_count = 1;
-    store->partitions[0].flag_bios_grub = 1;
-    store->partitions[0].size_bytes = 1ULL * 1000000; /* 1MB */
-
-    int result = is_boot_partition_too_small(store, 0);
-
-    assert_int_equal(1, result);
-}
-
-/** Verifies is_boot_partition_too_small() returns 0 when no boot partition. */
-static void test_is_boot_partition_too_small_no_boot(void **state)
+/** Verifies validate_bios_gpt_boot() returns error when no bios_grub. */
+static void test_validate_bios_gpt_boot_no_bios_grub(void **state)
 {
     (void)state;
     Store *store = get_store();
     store->partition_count = 1;
     strncpy(store->partitions[0].mount_point, "/", STORE_MAX_MOUNT_LEN);
-    store->partitions[0].flag_esp = 0;
+
+    BootValidationError result = validate_bios_gpt_boot(store);
+
+    assert_int_equal(BOOT_ERR_BIOS_GPT_NO_BIOS_GRUB, result);
+}
+
+/** Verifies validate_bios_gpt_boot() returns OK with valid bios_grub. */
+static void test_validate_bios_gpt_boot_valid(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 2;
+    store->partitions[0].flag_bios_grub = 1;
+    store->partitions[0].filesystem = FS_NONE;
+    store->partitions[0].size_bytes = BIOS_GRUB_MIN_SIZE_BYTES;
+    strncpy(store->partitions[0].mount_point, "[none]", STORE_MAX_MOUNT_LEN);
+    strncpy(store->partitions[1].mount_point, "/", STORE_MAX_MOUNT_LEN);
+
+    BootValidationError result = validate_bios_gpt_boot(store);
+
+    assert_int_equal(BOOT_OK, result);
+}
+
+/** Verifies validate_bios_gpt_boot() returns error if bios_grub has filesystem. */
+static void test_validate_bios_gpt_boot_has_fs(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    store->partitions[0].flag_bios_grub = 1;
+    store->partitions[0].filesystem = FS_EXT4;
+    store->partitions[0].size_bytes = BIOS_GRUB_MIN_SIZE_BYTES;
+    strncpy(store->partitions[0].mount_point, "[none]", STORE_MAX_MOUNT_LEN);
+
+    BootValidationError result = validate_bios_gpt_boot(store);
+
+    assert_int_equal(BOOT_ERR_BIOS_GPT_BIOS_GRUB_HAS_FS, result);
+}
+
+/** Verifies validate_bios_gpt_boot() returns error if bios_grub has mount. */
+static void test_validate_bios_gpt_boot_has_mount(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    store->partitions[0].flag_bios_grub = 1;
+    store->partitions[0].filesystem = FS_NONE;
+    store->partitions[0].size_bytes = BIOS_GRUB_MIN_SIZE_BYTES;
+    strncpy(store->partitions[0].mount_point, "/boot", STORE_MAX_MOUNT_LEN);
+
+    BootValidationError result = validate_bios_gpt_boot(store);
+
+    assert_int_equal(BOOT_ERR_BIOS_GPT_BIOS_GRUB_HAS_MOUNT, result);
+}
+
+/** Verifies validate_bios_gpt_boot() returns error if bios_grub too small. */
+static void test_validate_bios_gpt_boot_too_small(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    store->partitions[0].flag_bios_grub = 1;
+    store->partitions[0].filesystem = FS_NONE;
+    store->partitions[0].size_bytes = BIOS_GRUB_MIN_SIZE_BYTES - 1;
+    strncpy(store->partitions[0].mount_point, "[none]", STORE_MAX_MOUNT_LEN);
+
+    BootValidationError result = validate_bios_gpt_boot(store);
+
+    assert_int_equal(BOOT_ERR_BIOS_GPT_BIOS_GRUB_TOO_SMALL, result);
+}
+
+/** Verifies validate_bios_gpt_boot() returns error if ESP present. */
+static void test_validate_bios_gpt_boot_has_esp(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 2;
+    store->partitions[0].flag_esp = 1;
+    store->partitions[1].flag_bios_grub = 1;
+    store->partitions[1].filesystem = FS_NONE;
+    store->partitions[1].size_bytes = BIOS_GRUB_MIN_SIZE_BYTES;
+    strncpy(store->partitions[1].mount_point, "[none]", STORE_MAX_MOUNT_LEN);
+
+    BootValidationError result = validate_bios_gpt_boot(store);
+
+    assert_int_equal(BOOT_ERR_BIOS_GPT_HAS_ESP, result);
+}
+
+/** Verifies validate_bios_mbr_boot() always returns OK. */
+static void test_validate_bios_mbr_boot_ok(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    strncpy(store->partitions[0].mount_point, "/", STORE_MAX_MOUNT_LEN);
+
+    BootValidationError result = validate_bios_mbr_boot(store);
+
+    assert_int_equal(BOOT_OK, result);
+}
+
+/** Verifies validate_optional_boot() returns OK when no /boot. */
+static void test_validate_optional_boot_no_boot(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    strncpy(store->partitions[0].mount_point, "/", STORE_MAX_MOUNT_LEN);
+
+    BootValidationError result = validate_optional_boot(store);
+
+    assert_int_equal(BOOT_OK, result);
+}
+
+/** Verifies validate_optional_boot() returns OK with valid /boot. */
+static void test_validate_optional_boot_valid(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 2;
+    strncpy(store->partitions[0].mount_point, "/boot", STORE_MAX_MOUNT_LEN);
+    store->partitions[0].filesystem = FS_EXT4;
+    store->partitions[0].size_bytes = BOOT_PART_MIN_SIZE_BYTES;
     store->partitions[0].flag_bios_grub = 0;
+    strncpy(store->partitions[1].mount_point, "/", STORE_MAX_MOUNT_LEN);
 
-    int result = is_boot_partition_too_small(store, 1);
+    BootValidationError result = validate_optional_boot(store);
 
-    assert_int_equal(0, result);
+    assert_int_equal(BOOT_OK, result);
 }
 
-/** Verifies ESP at exact minimum size passes. */
-static void test_is_boot_partition_too_small_esp_exact_min(void **state)
+/** Verifies validate_optional_boot() returns error if /boot too small. */
+static void test_validate_optional_boot_too_small(void **state)
 {
     (void)state;
     Store *store = get_store();
     store->partition_count = 1;
-    store->partitions[0].flag_esp = 1;
-    store->partitions[0].size_bytes = 512ULL * 1000000; /* Exactly 512MB */
+    strncpy(store->partitions[0].mount_point, "/boot", STORE_MAX_MOUNT_LEN);
+    store->partitions[0].filesystem = FS_EXT4;
+    store->partitions[0].size_bytes = BOOT_PART_MIN_SIZE_BYTES - 1;
 
-    int result = is_boot_partition_too_small(store, 1);
+    BootValidationError result = validate_optional_boot(store);
 
-    assert_int_equal(0, result);
+    assert_int_equal(BOOT_ERR_BOOT_TOO_SMALL, result);
 }
 
-/** Verifies BIOS boot at exact minimum size passes. */
-static void test_is_boot_partition_too_small_bios_exact_min(void **state)
+/** Verifies validate_optional_boot() returns error if /boot has no fs. */
+static void test_validate_optional_boot_no_fs(void **state)
 {
     (void)state;
     Store *store = get_store();
     store->partition_count = 1;
+    strncpy(store->partitions[0].mount_point, "/boot", STORE_MAX_MOUNT_LEN);
+    store->partitions[0].filesystem = FS_NONE;
+    store->partitions[0].size_bytes = BOOT_PART_MIN_SIZE_BYTES;
+
+    BootValidationError result = validate_optional_boot(store);
+
+    assert_int_equal(BOOT_ERR_BOOT_NO_FS, result);
+}
+
+/** Verifies validate_optional_boot() returns error if /boot is bios_grub. */
+static void test_validate_optional_boot_is_bios_grub(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    strncpy(store->partitions[0].mount_point, "/boot", STORE_MAX_MOUNT_LEN);
+    store->partitions[0].filesystem = FS_EXT4;
+    store->partitions[0].size_bytes = BOOT_PART_MIN_SIZE_BYTES;
     store->partitions[0].flag_bios_grub = 1;
-    store->partitions[0].size_bytes = 2ULL * 1000000; /* Exactly 2MB */
 
-    int result = is_boot_partition_too_small(store, 0);
+    BootValidationError result = validate_optional_boot(store);
 
-    assert_int_equal(0, result);
+    assert_int_equal(BOOT_ERR_BOOT_IS_BIOS_GRUB, result);
 }
 
-/** Verifies ESP just below minimum fails. */
-static void test_is_boot_partition_too_small_esp_just_under(void **state)
+/** Verifies validate_boot_config() uses UEFI rules for UEFI firmware. */
+static void test_validate_boot_config_uefi(void **state)
 {
     (void)state;
     Store *store = get_store();
-    store->partition_count = 1;
+    store->partition_count = 2;
     store->partitions[0].flag_esp = 1;
-    store->partitions[0].size_bytes = 511ULL * 1000000; /* 511MB */
+    store->partitions[0].filesystem = FS_FAT32;
+    store->partitions[0].size_bytes = ESP_MIN_SIZE_BYTES;
+    strncpy(store->partitions[0].mount_point, "/boot/efi", STORE_MAX_MOUNT_LEN);
+    strncpy(store->partitions[1].mount_point, "/", STORE_MAX_MOUNT_LEN);
 
-    int result = is_boot_partition_too_small(store, 1);
+    BootValidationError result = validate_boot_config(
+        store, FIRMWARE_UEFI, DISK_LABEL_GPT
+    );
 
-    assert_int_equal(1, result);
+    assert_int_equal(BOOT_OK, result);
 }
 
-/** Verifies BIOS boot just below minimum fails. */
-static void test_is_boot_partition_too_small_bios_just_under(void **state)
+/** Verifies validate_boot_config() uses BIOS+GPT rules for BIOS with GPT. */
+static void test_validate_boot_config_bios_gpt(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 2;
+    store->partitions[0].flag_bios_grub = 1;
+    store->partitions[0].filesystem = FS_NONE;
+    store->partitions[0].size_bytes = BIOS_GRUB_MIN_SIZE_BYTES;
+    strncpy(store->partitions[0].mount_point, "[none]", STORE_MAX_MOUNT_LEN);
+    strncpy(store->partitions[1].mount_point, "/", STORE_MAX_MOUNT_LEN);
+
+    BootValidationError result = validate_boot_config(
+        store, FIRMWARE_BIOS, DISK_LABEL_GPT
+    );
+
+    assert_int_equal(BOOT_OK, result);
+}
+
+/** Verifies validate_boot_config() uses BIOS+MBR rules for BIOS with MBR. */
+static void test_validate_boot_config_bios_mbr(void **state)
 {
     (void)state;
     Store *store = get_store();
     store->partition_count = 1;
-    store->partitions[0].flag_bios_grub = 1;
-    store->partitions[0].size_bytes = 1999999; /* Just under 2MB */
+    strncpy(store->partitions[0].mount_point, "/", STORE_MAX_MOUNT_LEN);
 
-    int result = is_boot_partition_too_small(store, 0);
+    BootValidationError result = validate_boot_config(
+        store, FIRMWARE_BIOS, DISK_LABEL_MBR
+    );
 
-    assert_int_equal(1, result);
+    assert_int_equal(BOOT_OK, result);
+}
+
+/** Verifies validate_boot_config() checks optional /boot after firmware. */
+static void test_validate_boot_config_with_boot(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 3;
+
+    // Valid ESP.
+    store->partitions[0].flag_esp = 1;
+    store->partitions[0].filesystem = FS_FAT32;
+    store->partitions[0].size_bytes = ESP_MIN_SIZE_BYTES;
+    strncpy(store->partitions[0].mount_point, "/boot/efi", STORE_MAX_MOUNT_LEN);
+
+    // Invalid /boot (too small).
+    store->partitions[1].filesystem = FS_EXT4;
+    store->partitions[1].size_bytes = BOOT_PART_MIN_SIZE_BYTES - 1;
+    strncpy(store->partitions[1].mount_point, "/boot", STORE_MAX_MOUNT_LEN);
+
+    strncpy(store->partitions[2].mount_point, "/", STORE_MAX_MOUNT_LEN);
+
+    BootValidationError result = validate_boot_config(
+        store, FIRMWARE_UEFI, DISK_LABEL_GPT
+    );
+
+    assert_int_equal(BOOT_ERR_BOOT_TOO_SMALL, result);
 }
 
 int main(void)
@@ -390,24 +542,37 @@ int main(void)
         cmocka_unit_test_setup_teardown(test_has_duplicate_mount_points_ignores_none, setup, teardown),
         cmocka_unit_test_setup_teardown(test_has_duplicate_mount_points_mixed, setup, teardown),
 
-        // has_required_boot_partition tests
-        cmocka_unit_test_setup_teardown(test_has_required_boot_partition_no_esp_uefi, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_has_required_boot_partition_has_esp_uefi, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_has_required_boot_partition_no_bios_grub, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_has_required_boot_partition_has_bios_grub, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_has_required_boot_partition_esp_ignored_bios, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_has_required_boot_partition_bios_ignored_uefi, setup, teardown),
+        // validate_uefi_boot tests
+        cmocka_unit_test_setup_teardown(test_validate_uefi_boot_no_esp, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_uefi_boot_valid_esp, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_uefi_boot_esp_not_fat32, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_uefi_boot_esp_wrong_mount, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_uefi_boot_esp_too_small, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_uefi_boot_has_bios_grub, setup, teardown),
 
-        // is_boot_partition_too_small tests
-        cmocka_unit_test_setup_teardown(test_is_boot_partition_too_small_esp_ok, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_is_boot_partition_too_small_esp_too_small, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_is_boot_partition_too_small_bios_ok, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_is_boot_partition_too_small_bios_too_small, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_is_boot_partition_too_small_no_boot, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_is_boot_partition_too_small_esp_exact_min, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_is_boot_partition_too_small_bios_exact_min, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_is_boot_partition_too_small_esp_just_under, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_is_boot_partition_too_small_bios_just_under, setup, teardown),
+        // validate_bios_gpt_boot tests
+        cmocka_unit_test_setup_teardown(test_validate_bios_gpt_boot_no_bios_grub, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_bios_gpt_boot_valid, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_bios_gpt_boot_has_fs, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_bios_gpt_boot_has_mount, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_bios_gpt_boot_too_small, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_bios_gpt_boot_has_esp, setup, teardown),
+
+        // validate_bios_mbr_boot tests
+        cmocka_unit_test_setup_teardown(test_validate_bios_mbr_boot_ok, setup, teardown),
+
+        // validate_optional_boot tests
+        cmocka_unit_test_setup_teardown(test_validate_optional_boot_no_boot, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_optional_boot_valid, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_optional_boot_too_small, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_optional_boot_no_fs, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_optional_boot_is_bios_grub, setup, teardown),
+
+        // validate_boot_config integration tests
+        cmocka_unit_test_setup_teardown(test_validate_boot_config_uefi, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_boot_config_bios_gpt, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_boot_config_bios_mbr, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_validate_boot_config_with_boot, setup, teardown),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

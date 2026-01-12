@@ -58,8 +58,19 @@ static void setup_minimal_config(void)
 {
     Store *store = get_store();
     store->dry_run = 1;
+    store->force_uefi = 2;        // Force BIOS mode.
+    store->force_disk_label = 2;  // Force MBR (no boot partition needed).
     strncpy(store->disk, "/dev/sda", STORE_MAX_DISK_LEN);
     strncpy(store->locale, "en_US.UTF-8", STORE_MAX_LOCALE_LEN);
+    strncpy(store->hostname, "testhost", STORE_MAX_HOSTNAME_LEN);
+
+    // Set up minimal user configuration.
+    store->user_count = 1;
+    strncpy(store->users[0].username, "testuser", STORE_MAX_USERNAME_LEN);
+    strncpy(store->users[0].password, "testpass", STORE_MAX_PASSWORD_LEN);
+    store->users[0].is_admin = 1;
+
+    // Set up minimal partition configuration.
     store->partition_count = 1;
     store->partitions[0].size_bytes = 10ULL * 1000000000;
     store->partitions[0].filesystem = FS_EXT4;

@@ -141,3 +141,43 @@ void get_partition_device(
         snprintf(out_buffer, buffer_size, "%s%d", disk, partition_number);
     }
 }
+
+FirmwareType detect_firmware_type(void)
+{
+    Store *store = get_store();
+
+    // Check for forced firmware type (for testing).
+    if (store->force_uefi == 1)
+    {
+        return FIRMWARE_UEFI;
+    }
+    if (store->force_uefi == 2)
+    {
+        return FIRMWARE_BIOS;
+    }
+
+    // Auto-detect by checking for EFI firmware directory.
+    if (access("/sys/firmware/efi", F_OK) == 0)
+    {
+        return FIRMWARE_UEFI;
+    }
+    return FIRMWARE_BIOS;
+}
+
+DiskLabel get_disk_label(void)
+{
+    Store *store = get_store();
+
+    // Check for forced disk label (for testing).
+    if (store->force_disk_label == 1)
+    {
+        return DISK_LABEL_GPT;
+    }
+    if (store->force_disk_label == 2)
+    {
+        return DISK_LABEL_MBR;
+    }
+
+    // Default to GPT for modern systems.
+    return DISK_LABEL_GPT;
+}

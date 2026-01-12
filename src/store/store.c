@@ -9,6 +9,8 @@ static Store store = {
     .current_step = 0,
     .dry_run = 0,
     .force_uefi = 0,
+    .force_disk_label = 0,
+    .disk_label = DISK_LABEL_GPT,
     .locale = "",
     .hostname = "",
     .users = {{0}},
@@ -29,6 +31,8 @@ void reset_store(void)
     store.current_step = 0;
     store.dry_run = 0;
     store.force_uefi = 0;
+    store.force_disk_label = 0;
+    store.disk_label = DISK_LABEL_GPT;
 
     // Clear user selection strings.
     store.locale[0] = '\0';

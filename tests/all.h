@@ -15,8 +15,31 @@
 /* src/steps/confirm/confirm.c */
 int has_root_partition(Store *store);
 int has_duplicate_mount_points(Store *store);
-int has_required_boot_partition(Store *store, int is_uefi);
-int is_boot_partition_too_small(Store *store, int is_uefi);
+
+typedef enum {
+    BOOT_OK = 0,
+    BOOT_ERR_UEFI_NO_ESP,
+    BOOT_ERR_UEFI_ESP_NOT_FAT32,
+    BOOT_ERR_UEFI_ESP_WRONG_MOUNT,
+    BOOT_ERR_UEFI_ESP_TOO_SMALL,
+    BOOT_ERR_UEFI_HAS_BIOS_GRUB,
+    BOOT_ERR_BIOS_GPT_NO_BIOS_GRUB,
+    BOOT_ERR_BIOS_GPT_BIOS_GRUB_HAS_FS,
+    BOOT_ERR_BIOS_GPT_BIOS_GRUB_HAS_MOUNT,
+    BOOT_ERR_BIOS_GPT_BIOS_GRUB_TOO_SMALL,
+    BOOT_ERR_BIOS_GPT_HAS_ESP,
+    BOOT_ERR_BOOT_TOO_SMALL,
+    BOOT_ERR_BOOT_NO_FS,
+    BOOT_ERR_BOOT_IS_BIOS_GRUB
+} BootValidationError;
+
+BootValidationError validate_uefi_boot(Store *store);
+BootValidationError validate_bios_gpt_boot(Store *store);
+BootValidationError validate_bios_mbr_boot(Store *store);
+BootValidationError validate_optional_boot(Store *store);
+BootValidationError validate_boot_config(
+    Store *store, FirmwareType firmware, DiskLabel disk_label
+);
 
 /* src/steps/partition/dialogs.c */
 #define SIZE_COUNT 19

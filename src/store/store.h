@@ -39,6 +39,18 @@ typedef enum {
     PART_LOGICAL
 } PartitionType;
 
+/** Disk label types (partition table). */
+typedef enum {
+    DISK_LABEL_GPT,
+    DISK_LABEL_MBR
+} DiskLabel;
+
+/** Firmware types. */
+typedef enum {
+    FIRMWARE_UEFI,
+    FIRMWARE_BIOS
+} FirmwareType;
+
 /** Represents a single partition configuration. */
 typedef struct Partition {
     unsigned long long size_bytes;
@@ -62,7 +74,9 @@ typedef struct User
 typedef struct {
     int current_step;
     int dry_run;
-    int force_uefi; // 0 = auto-detect, 1 = force UEFI, -1 = force BIOS
+    int force_uefi;       // 0 = auto-detect, 1 = force UEFI, 2 = force BIOS
+    int force_disk_label; // 0 = auto (GPT), 1 = force GPT, 2 = force MBR
+    DiskLabel disk_label; // Determined disk label (GPT or MBR)
     char locale[STORE_MAX_LOCALE_LEN];
     char hostname[STORE_MAX_HOSTNAME_LEN];
     User users[STORE_MAX_USERS];

@@ -57,3 +57,20 @@ unsigned long long sum_partition_sizes(
 void get_partition_device(
     const char *disk, int partition_number, char *out_buffer, size_t buffer_size
 );
+
+/**
+ * Detects the system firmware type (UEFI or BIOS).
+ * Checks for the presence of /sys/firmware/efi to determine UEFI.
+ * Respects the store's force_uefi setting for testing.
+ *
+ * @return The detected firmware type.
+ */
+FirmwareType detect_firmware_type(void);
+
+/**
+ * Gets the disk label type that will be used for partitioning.
+ * Currently defaults to GPT. Respects the store's force_disk_label setting.
+ *
+ * @return The disk label type to use.
+ */
+DiskLabel get_disk_label(void);
