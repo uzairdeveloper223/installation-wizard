@@ -81,7 +81,6 @@ int run_install(install_progress_cb progress_cb, void *context)
     NOTIFY(INSTALL_STEP_OK, STEP_USERS, 0);
 
     // Cleanup.
-    close_dry_run_log();
     cleanup_mounts();
 
     NOTIFY(INSTALL_COMPLETE, 0, 0);
@@ -91,6 +90,7 @@ int run_install(install_progress_cb progress_cb, void *context)
     set_command_poll_callback(NULL);
 
     run_command("reboot >>" INSTALL_LOG_PATH " 2>&1");
+    close_dry_run_log();
 
     return 0;
 }
