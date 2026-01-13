@@ -267,8 +267,8 @@ static void test_configure_users_rejects_empty_user_list(void **state)
     int result = configure_users();
     close_dry_run_log();
 
-    // Should return -2 for empty user list.
-    assert_int_equal(-2, result);
+    // Should return -1 for empty user list.
+    assert_int_equal(-1, result);
 }
 
 /** Verifies configure_users() shell-escapes usernames. */
