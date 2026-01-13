@@ -40,14 +40,14 @@ static void test_get_store_returns_same_instance(void **state)
     assert_ptr_equal(store1, store2);
 }
 
-/** Verifies that reset_store() resets current_step to zero. */
+/** Verifies that reset_store() resets current_step to 1. */
 static void test_reset_store_clears_current_step(void **state)
 {
     (void)state;
     Store *store = get_store();
     store->current_step = 5;
     reset_store();
-    assert_int_equal(0, store->current_step);
+    assert_int_equal(1, store->current_step);
 }
 
 /** Verifies that reset_store() resets dry_run flag to zero. */

@@ -245,8 +245,8 @@ static void render_config_summary(WINDOW *modal, Store *store)
     );
     mvwprintw(modal, 7, 3, "  Disk: %s", store->disk);
 
-    // Display partition summary.
-    unsigned long long disk_size = get_disk_size(store->disk);
+    // Display partition summary using cached disk size.
+    unsigned long long disk_size = store->disk_size;
     unsigned long long used = sum_partition_sizes(store->partitions, store->partition_count);
     unsigned long long free_space = (disk_size > used) ? disk_size - used : 0;
     char free_string[32];

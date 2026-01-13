@@ -58,8 +58,8 @@ static void setup_minimal_config(void)
 {
     Store *store = get_store();
     store->dry_run = 1;
-    store->force_uefi = 2;        // Force BIOS mode.
-    store->force_disk_label = 2;  // Force MBR (no boot partition needed).
+    store->firmware = FIRMWARE_BIOS;
+    store->disk_label = DISK_LABEL_MBR;
     strncpy(store->disk, "/dev/sda", STORE_MAX_DISK_LEN);
     strncpy(store->locale, "en_US.UTF-8", STORE_MAX_LOCALE_LEN);
     strncpy(store->hostname, "testhost", STORE_MAX_HOSTNAME_LEN);

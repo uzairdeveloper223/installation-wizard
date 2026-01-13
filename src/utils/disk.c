@@ -146,38 +146,27 @@ FirmwareType detect_firmware_type(void)
 {
     Store *store = get_store();
 
-    // Check for forced firmware type (for testing).
-    if (store->force_uefi == 1)
+    // Return stored firmware type if already detected.
+    if (store->firmware != FIRMWARE_UNKNOWN)
     {
-        return FIRMWARE_UEFI;
-    }
-    if (store->force_uefi == 2)
-    {
-        return FIRMWARE_BIOS;
+        return store->firmware;
     }
 
     // Auto-detect by checking for EFI firmware directory.
     if (access("/sys/firmware/efi", F_OK) == 0)
     {
-        return FIRMWARE_UEFI;
+        store->firmware = FIRMWARE_UEFI;
     }
-    return FIRMWARE_BIOS;
+    else
+    {
+        store->firmware = FIRMWARE_BIOS;
+    }
+
+    return store->firmware;
 }
 
 DiskLabel get_disk_label(void)
 {
     Store *store = get_store();
-
-    // Check for forced disk label (for testing).
-    if (store->force_disk_label == 1)
-    {
-        return DISK_LABEL_GPT;
-    }
-    if (store->force_disk_label == 2)
-    {
-        return DISK_LABEL_MBR;
-    }
-
-    // Default to GPT for modern systems.
-    return DISK_LABEL_GPT;
+    return store->disk_label;
 }

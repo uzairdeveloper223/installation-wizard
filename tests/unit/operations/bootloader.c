@@ -140,7 +140,7 @@ static void test_setup_bootloader_bios_copies_packages(void **state)
     (void)state;
     Store *store = get_store();
     store->dry_run = 1;
-    store->force_uefi = -1; // Force BIOS mode
+    store->firmware = FIRMWARE_BIOS;
     strncpy(store->disk, "/dev/sda", STORE_MAX_DISK_LEN);
     store->partition_count = 1;
     store->partitions[0].size_bytes = 1024ULL * 1024 * 1024;
@@ -166,7 +166,7 @@ static void test_setup_bootloader_uefi_copies_packages(void **state)
     (void)state;
     Store *store = get_store();
     store->dry_run = 1;
-    store->force_uefi = 1; // Force UEFI mode
+    store->firmware = FIRMWARE_UEFI;
     strncpy(store->disk, "/dev/sda", STORE_MAX_DISK_LEN);
     store->partition_count = 2;
 
@@ -227,7 +227,7 @@ static void test_setup_bootloader_bios_grub_install(void **state)
     (void)state;
     Store *store = get_store();
     store->dry_run = 1;
-    store->force_uefi = -1; // Force BIOS mode
+    store->firmware = FIRMWARE_BIOS;
     strncpy(store->disk, "/dev/sda", STORE_MAX_DISK_LEN);
     store->partition_count = 1;
     store->partitions[0].size_bytes = 1024ULL * 1024 * 1024;
@@ -254,7 +254,7 @@ static void test_setup_bootloader_uefi_grub_install(void **state)
     (void)state;
     Store *store = get_store();
     store->dry_run = 1;
-    store->force_uefi = 1; // Force UEFI mode
+    store->firmware = FIRMWARE_UEFI;
     strncpy(store->disk, "/dev/sda", STORE_MAX_DISK_LEN);
     store->partition_count = 2;
 
@@ -359,7 +359,7 @@ static void test_setup_bootloader_quotes_disk_path(void **state)
     (void)state;
     Store *store = get_store();
     store->dry_run = 1;
-    store->force_uefi = -1; // Force BIOS mode to test disk path quoting
+    store->firmware = FIRMWARE_BIOS;
     strncpy(store->disk, "/dev/sda", STORE_MAX_DISK_LEN);
     store->partition_count = 1;
     store->partitions[0].size_bytes = 1024ULL * 1024 * 1024;
@@ -384,7 +384,7 @@ static void test_setup_bootloader_nvme_disk(void **state)
     (void)state;
     Store *store = get_store();
     store->dry_run = 1;
-    store->force_uefi = -1; // Force BIOS mode to test NVMe disk path
+    store->firmware = FIRMWARE_BIOS;
     strncpy(store->disk, "/dev/nvme0n1", STORE_MAX_DISK_LEN);
     store->partition_count = 1;
     store->partitions[0].size_bytes = 1024ULL * 1024 * 1024;

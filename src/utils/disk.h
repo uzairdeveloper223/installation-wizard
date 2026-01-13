@@ -61,15 +61,14 @@ void get_partition_device(
 /**
  * Detects the system firmware type (UEFI or BIOS).
  * Checks for the presence of /sys/firmware/efi to determine UEFI.
- * Respects the store's force_uefi setting for testing.
+ * Result is cached in store->firmware after first detection.
  *
  * @return The detected firmware type.
  */
 FirmwareType detect_firmware_type(void);
 
 /**
- * Gets the disk label type that will be used for partitioning.
- * Currently defaults to GPT. Respects the store's force_disk_label setting.
+ * Gets the disk label type from the store.
  *
  * @return The disk label type to use.
  */

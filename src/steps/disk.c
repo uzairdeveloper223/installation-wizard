@@ -7,6 +7,23 @@
 
 int populate_disk_options(StepOption *out_options, int max_count)
 {
+    Store *store = get_store();
+
+    // Return stored disks if already populated.
+    if (store->disk_count >= 0)
+    {
+        int count = store->disk_count;
+        if (count > max_count) count = max_count;
+        for (int i = 0; i < count; i++)
+        {
+            snprintf(out_options[i].value, sizeof(out_options[i].value),
+                     "%s", store->disks[i].value);
+            snprintf(out_options[i].label, sizeof(out_options[i].label),
+                     "%s", store->disks[i].label);
+        }
+        return count;
+    }
+
     // Open `/sys/block` to read block devices.
     DIR *dir = opendir("/sys/block");
     if (dir == NULL)
@@ -14,13 +31,17 @@ int populate_disk_options(StepOption *out_options, int max_count)
         // Use fallback if `/sys/block` is unavailable.
         snprintf(out_options[0].value, sizeof(out_options[0].value), "/dev/sda");
         snprintf(out_options[0].label, sizeof(out_options[0].label), "/dev/sda (Unknown size)");
+        store->disk_count = 1;
+        snprintf(store->disks[0].value, sizeof(store->disks[0].value), "/dev/sda");
+        snprintf(store->disks[0].label, sizeof(store->disks[0].label), "/dev/sda (Unknown size)");
         return 1;
     }
 
     // Iterate over block devices in `/sys/block`.
     int count = 0;
+    int limit = max_count < STORE_MAX_OPTIONS ? max_count : STORE_MAX_OPTIONS;
     struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL && count < max_count)
+    while ((entry = readdir(dir)) != NULL && count < limit)
     {
         const char *name = entry->d_name;
 
@@ -69,7 +90,20 @@ int populate_disk_options(StepOption *out_options, int max_count)
     {
         snprintf(out_options[0].value, sizeof(out_options[0].value), "/dev/sda");
         snprintf(out_options[0].label, sizeof(out_options[0].label), "/dev/sda (No disks detected)");
+        store->disk_count = 1;
+        snprintf(store->disks[0].value, sizeof(store->disks[0].value), "/dev/sda");
+        snprintf(store->disks[0].label, sizeof(store->disks[0].label), "/dev/sda (No disks detected)");
         return 1;
+    }
+
+    // Store the results.
+    store->disk_count = count;
+    for (int i = 0; i < count; i++)
+    {
+        snprintf(store->disks[i].value, sizeof(store->disks[i].value),
+                 "%s", out_options[i].value);
+        snprintf(store->disks[i].label, sizeof(store->disks[i].label),
+                 "%s", out_options[i].label);
     }
 
     return count;
@@ -118,6 +152,8 @@ int run_disk_step(WINDOW *modal)
     {
         // Store the selected disk in global store.
         snprintf(store->disk, sizeof(store->disk), "%s", options[selected].value);
+        // Cache the disk size.
+        store->disk_size = get_disk_size(store->disk);
     }
 
     return result;

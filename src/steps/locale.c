@@ -71,6 +71,23 @@ static int is_technical_locale(const char *locale)
 
 int populate_locale_options(StepOption *out_options, int max_count)
 {
+    Store *store = get_store();
+
+    // Return stored locales if already populated.
+    if (store->locale_count >= 0)
+    {
+        int count = store->locale_count;
+        if (count > max_count) count = max_count;
+        for (int i = 0; i < count; i++)
+        {
+            snprintf(out_options[i].value, sizeof(out_options[i].value),
+                     "%s", store->locales[i].value);
+            snprintf(out_options[i].label, sizeof(out_options[i].label),
+                     "%s", store->locales[i].label);
+        }
+        return count;
+    }
+
     // Run locale -a to get available system locales.
     FILE *pipe = popen("locale -a 2>/dev/null", "r");
     if (pipe == NULL)
@@ -78,13 +95,17 @@ int populate_locale_options(StepOption *out_options, int max_count)
         // Use fallback locale if detection fails.
         snprintf(out_options[0].value, sizeof(out_options[0].value), "en_US.UTF-8");
         snprintf(out_options[0].label, sizeof(out_options[0].label), "en_US.UTF-8 (Default)");
+        store->locale_count = 1;
+        snprintf(store->locales[0].value, sizeof(store->locales[0].value), "en_US.UTF-8");
+        snprintf(store->locales[0].label, sizeof(store->locales[0].label), "en_US.UTF-8 (Default)");
         return 1;
     }
 
     // Read locales line by line and populate options array.
     int count = 0;
+    int limit = max_count < STORE_MAX_OPTIONS ? max_count : STORE_MAX_OPTIONS;
     char line[256];
-    while (fgets(line, sizeof(line), pipe) != NULL && count < max_count)
+    while (fgets(line, sizeof(line), pipe) != NULL && count < limit)
     {
         // Remove trailing newline from locale name.
         line[strcspn(line, "\n")] = '\0';
@@ -121,11 +142,24 @@ int populate_locale_options(StepOption *out_options, int max_count)
     {
         snprintf(out_options[0].value, sizeof(out_options[0].value), "en_US.UTF-8");
         snprintf(out_options[0].label, sizeof(out_options[0].label), "en_US.UTF-8 (Default)");
+        store->locale_count = 1;
+        snprintf(store->locales[0].value, sizeof(store->locales[0].value), "en_US.UTF-8");
+        snprintf(store->locales[0].label, sizeof(store->locales[0].label), "en_US.UTF-8 (Default)");
         return 1;
     }
 
     // Sort locales by priority then alphabetically.
     qsort(out_options, count, sizeof(StepOption), compare_locales);
+
+    // Store the sorted results.
+    store->locale_count = count;
+    for (int i = 0; i < count; i++)
+    {
+        snprintf(store->locales[i].value, sizeof(store->locales[i].value),
+                 "%s", out_options[i].value);
+        snprintf(store->locales[i].label, sizeof(store->locales[i].label),
+                 "%s", out_options[i].label);
+    }
 
     return count;
 }

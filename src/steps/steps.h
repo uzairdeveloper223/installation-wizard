@@ -1,10 +1,8 @@
 #pragma once
 #include "../all.h"
 
-/**
- * Maximum number of options in a selection list.
- */
-#define STEPS_MAX_OPTIONS 32
+/** Maximum number of options in a selection list. */
+#define STEPS_MAX_OPTIONS STORE_MAX_OPTIONS
 
 /** A type representing a single installation step. */
 typedef struct
@@ -15,12 +13,8 @@ typedef struct
     const char *footer;
 } Step;
 
-/** A type representing a selectable option in a step. */
-typedef struct
-{
-    char value[128];
-    char label[256];
-} StepOption;
+/** StepOption is an alias for StoreOption (same structure). */
+typedef StoreOption StepOption;
 
 /**
  * Displays a step in the modal window.

@@ -9,9 +9,9 @@
 
 int run_partition_step(WINDOW *modal)
 {
-    // Get store and disk size for partition operations.
+    // Get store and use cached disk size for partition operations.
     Store *store = get_store();
-    unsigned long long disk_size = get_disk_size(store->disk);
+    unsigned long long disk_size = store->disk_size;
 
     // Define available actions for the partition step.
     StepOption actions[] = {

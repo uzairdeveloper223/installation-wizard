@@ -70,12 +70,12 @@ int main(int argc, char *argv[])
 
     // A loop that runs throughout the entire wizard process and waits for user
     // input at each step, allowing back-and-forth navigation between steps.
-    int step = 1;
-    while (step <= 5)
+    store->current_step = 1;
+    while (store->current_step <= 5)
     {
         int result = 0;
 
-        switch (step)
+        switch (store->current_step)
         {
             case 1:
                 result = run_locale_step(modal);
@@ -96,13 +96,13 @@ int main(int argc, char *argv[])
 
         if (result)
         {
-            step++;
+            store->current_step++;
         }
-        else if (step > 1)
+        else if (store->current_step > 1)
         {
-            step--;
+            store->current_step--;
         }
-        // If step == 1 and result == 0, stay on step 1.
+        // If current_step == 1 and result == 0, stay on step 1.
     }
 
     // Run installation using settings from global state.

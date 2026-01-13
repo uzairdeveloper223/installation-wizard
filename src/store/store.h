@@ -47,6 +47,7 @@ typedef enum {
 
 /** Firmware types. */
 typedef enum {
+    FIRMWARE_UNKNOWN = -1,
     FIRMWARE_UEFI,
     FIRMWARE_BIOS
 } FirmwareType;
@@ -70,20 +71,35 @@ typedef struct User
     int is_admin;
 } User;
 
+/** Maximum number of options for locales/disks. */
+#define STORE_MAX_OPTIONS 32
+
+/** A type representing a selectable option. */
+typedef struct {
+    char value[128];
+    char label[256];
+} StoreOption;
+
 /** Global store containing user selections and installation settings. */
 typedef struct {
     int current_step;
     int dry_run;
-    int force_uefi;       // 0 = auto-detect, 1 = force UEFI, 2 = force BIOS
-    int force_disk_label; // 0 = auto (GPT), 1 = force GPT, 2 = force MBR
-    DiskLabel disk_label; // Determined disk label (GPT or MBR)
+    DiskLabel disk_label;
     char locale[STORE_MAX_LOCALE_LEN];
     char hostname[STORE_MAX_HOSTNAME_LEN];
     User users[STORE_MAX_USERS];
     int user_count;
     char disk[STORE_MAX_DISK_LEN];
+    unsigned long long disk_size;
     Partition partitions[STORE_MAX_PARTITIONS];
     int partition_count;
+
+    // Detected system information (populated once on first access).
+    StoreOption locales[STORE_MAX_OPTIONS];
+    int locale_count;         // -1 = not yet populated
+    StoreOption disks[STORE_MAX_OPTIONS];
+    int disk_count;           // -1 = not yet populated
+    FirmwareType firmware;    // FIRMWARE_UNKNOWN = not yet detected
 } Store;
 
 /**

@@ -35,13 +35,9 @@ static int verify_chroot_works(void)
     return (result == 0) ? 0 : -1;
 }
 
-static int detect_uefi_mode(Store *store)
+static int detect_uefi_mode(void)
 {
-    if (store->force_uefi != 0)
-    {
-        return (store->force_uefi > 0);
-    }
-    return (access("/sys/firmware/efi", F_OK) == 0);
+    return (detect_firmware_type() == FIRMWARE_UEFI);
 }
 
 static int find_esp_partition_index(Store *store)
@@ -201,7 +197,7 @@ int setup_bootloader(void)
     int result;
 
     // Detect boot mode.
-    int is_uefi = detect_uefi_mode(store);
+    int is_uefi = detect_uefi_mode();
 
     // Mount EFI partition if running in UEFI mode.
     if (is_uefi)

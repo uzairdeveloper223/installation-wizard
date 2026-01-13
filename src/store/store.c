@@ -6,18 +6,22 @@
 #include "../all.h"
 
 static Store store = {
-    .current_step = 0,
+    .current_step = 1,
     .dry_run = 0,
-    .force_uefi = 0,
-    .force_disk_label = 0,
     .disk_label = DISK_LABEL_GPT,
     .locale = "",
     .hostname = "",
     .users = {{0}},
     .user_count = 0,
     .disk = "",
+    .disk_size = 0,
     .partitions = {{0}},
-    .partition_count = 0
+    .partition_count = 0,
+    .locales = {{0}},
+    .locale_count = -1,
+    .disks = {{0}},
+    .disk_count = -1,
+    .firmware = FIRMWARE_UNKNOWN
 };
 
 Store *get_store(void)
@@ -28,15 +32,14 @@ Store *get_store(void)
 void reset_store(void)
 {
     // Reset step and mode state.
-    store.current_step = 0;
+    store.current_step = 1;
     store.dry_run = 0;
-    store.force_uefi = 0;
-    store.force_disk_label = 0;
     store.disk_label = DISK_LABEL_GPT;
 
     // Clear user selection strings.
     store.locale[0] = '\0';
     store.disk[0] = '\0';
+    store.disk_size = 0;
 
     // Initialize default hostname based on chassis type.
     snprintf(
@@ -54,4 +57,9 @@ void reset_store(void)
     // Clear partition configuration.
     memset(store.partitions, 0, sizeof(store.partitions));
     store.partition_count = 0;
+
+    // Reset detected system info (will be repopulated on next access).
+    store.locale_count = -1;
+    store.disk_count = -1;
+    store.firmware = FIRMWARE_UNKNOWN;
 }
