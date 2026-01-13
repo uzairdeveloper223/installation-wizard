@@ -42,6 +42,7 @@ static int detect_uefi_mode(void)
 
 static int find_esp_partition_index(Store *store)
 {
+    // Search partitions for one with ESP flag set.
     for (int i = 0; i < store->partition_count; i++)
     {
         if (store->partitions[i].flag_esp)
@@ -87,28 +88,39 @@ static int mount_efi_partition(const char *disk, int esp_partition_index)
 
 static int mount_chroot_system_dirs(void)
 {
+    // Bind mount /dev for device access inside chroot.
     if (run_command("mount --bind /dev /mnt/dev") != 0)
     {
         return -3;
     }
+
+    // Mount proc filesystem for process information.
     if (run_command("mount -t proc proc /mnt/proc") != 0)
     {
         run_command("umount /mnt/dev");
         return -4;
     }
+
+    // Mount sysfs for kernel and device information.
     if (run_command("mount -t sysfs sys /mnt/sys") != 0)
     {
         run_command("umount /mnt/proc");
         run_command("umount /mnt/dev");
         return -5;
     }
+
     return 0;
 }
 
 static void unmount_chroot_system_dirs(void)
 {
+    // Unmount sysfs.
     run_command("umount /mnt/sys");
+
+    // Unmount proc filesystem.
     run_command("umount /mnt/proc");
+
+    // Unmount /dev bind mount.
     run_command("umount /mnt/dev");
 }
 
@@ -151,6 +163,7 @@ static int run_grub_install(const char *disk, int is_uefi)
 
     if (is_uefi)
     {
+        // Install GRUB for UEFI target with EFI directory.
         snprintf(cmd, sizeof(cmd),
             "chroot /mnt /usr/sbin/grub-install "
             "--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB "
@@ -162,14 +175,17 @@ static int run_grub_install(const char *disk, int is_uefi)
     }
     else
     {
+        // Escape disk path for shell command.
         char escaped_disk[256];
         if (shell_escape(disk, escaped_disk, sizeof(escaped_disk)) != 0)
         {
             return -10;
         }
+
+        // Install GRUB to disk MBR for BIOS boot.
         snprintf(
             cmd, sizeof(cmd),
-            "chroot /mnt /usr/sbin/grub-install %s >>" INSTALL_LOG_PATH " 2>&1", 
+            "chroot /mnt /usr/sbin/grub-install %s >>" INSTALL_LOG_PATH " 2>&1",
             escaped_disk
         );
         if (run_command(cmd) != 0)
@@ -183,6 +199,7 @@ static int run_grub_install(const char *disk, int is_uefi)
 
 static int run_update_grub(void)
 {
+    // Run update-grub inside chroot to (re)generate GRUB config.
     if (run_command("chroot /mnt /usr/sbin/update-grub >>" INSTALL_LOG_PATH " 2>&1") != 0)
     {
         return -11;

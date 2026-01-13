@@ -274,11 +274,11 @@ static int run_user_form(
     strncpy(password_buffer, user->password, sizeof(password_buffer) - 1);
     password_buffer[sizeof(password_buffer) - 1] = '\0';
 
-    // Set up admin spinner options.
+    // Initialize admin spinner options and default value.
     const char *admin_options[] = { "No", "Yes" };
     int admin_current = user->is_admin ? 1 : 0;
 
-    // Primary user must always be admin.
+    // Force admin privileges for primary user.
     if (is_primary_user)
     {
         admin_current = 1;
@@ -340,17 +340,20 @@ static int run_user_form(
               "Lowercase letters, digits, underscores, hyphens.";
         fields[TEXT_FIELD_USERNAME].description_is_error = duplicate;
 
+        // Clear modal and render dialog title.
         clear_modal(modal);
         wattron(modal, A_BOLD);
         mvwprintw(modal, 2, 3, "%s", title);
         wattroff(modal, A_BOLD);
 
+        // Render the form fields.
         render_text_form(modal, 4, 3, 11, fields, TEXT_FIELD_COUNT, focused);
 
-        // Show validation messages.
+        // Validate username and password fields.
         int valid_username = is_valid_username(username_buffer);
         int valid_password = (strlen(password_buffer) > 0);
 
+        // Build footer with navigation instructions and refresh display.
         const char *footer_action = is_new_user ? "Add" : "Save";
         char action_string[32];
         snprintf(action_string, sizeof(action_string), "[Enter] %s", footer_action);
@@ -360,8 +363,10 @@ static int run_user_form(
         render_footer(modal, footer);
         wrefresh(modal);
 
+        // Wait for user input.
         int key = getch();
 
+        // Handle enter key to submit form.
         if (key == '\n' || key == KEY_ENTER)
         {
             if (duplicate)
@@ -382,10 +387,12 @@ static int run_user_form(
                 return 1;
             }
         }
+        // Handle escape key to cancel form.
         else if (key == 27)
         {
             return 0;
         }
+        // Handle up arrow to move focus up.
         else if (key == KEY_UP)
         {
             if (focused > 0)
@@ -393,6 +400,7 @@ static int run_user_form(
                 focused--;
             }
         }
+        // Handle down arrow to move focus down.
         else if (key == KEY_DOWN)
         {
             if (focused < TEXT_FIELD_COUNT - 1)
@@ -400,6 +408,7 @@ static int run_user_form(
                 focused++;
             }
         }
+        // Handle spinner field input.
         else if (fields[focused].is_spinner)
         {
             // Skip spinner input for primary user's admin field.
@@ -424,9 +433,9 @@ static int run_user_form(
                 }
             }
         }
+        // Handle text input.
         else
         {
-            // Handle text input.
             handle_text_input(key, &fields[focused]);
         }
     }
@@ -449,24 +458,30 @@ static int select_user(
 
     while (1)
     {
+        // Clear modal and render dialog title in bold.
         clear_modal(modal);
         wattron(modal, A_BOLD);
         mvwprintw(modal, 2, 3, "%s", title);
         wattroff(modal, A_BOLD);
 
+        // Render user table with current selection highlighted.
         render_user_table(modal, store, selected, 1, scroll_offset);
 
+        // Render footer with navigation instructions and refresh display.
         const char *footer[] = {
             "[Up][Down] Navigate", "[Enter] Select", "[Esc] Cancel", NULL
         };
         render_footer(modal, footer);
         wrefresh(modal);
 
+        // Wait for user input and determine minimum selectable index.
         int key = getch();
         int min_select = allow_first ? 0 : 1;
 
+        // Handle navigation and selection input.
         if (key == KEY_UP && selected > min_select)
         {
+            // Move selection up and adjust scroll if needed.
             selected--;
             if (selected < scroll_offset)
             {
@@ -475,6 +490,7 @@ static int select_user(
         }
         else if (key == KEY_DOWN && selected < store->user_count - 1)
         {
+            // Move selection down and adjust scroll if needed.
             selected++;
             if (selected >= scroll_offset + MAX_VISIBLE_USERS)
             {
@@ -483,10 +499,12 @@ static int select_user(
         }
         else if (key == '\n')
         {
+            // Return selected index when user confirms.
             return selected;
         }
         else if (key == 27)
         {
+            // Return -1 to indicate cancellation.
             return -1;
         }
     }

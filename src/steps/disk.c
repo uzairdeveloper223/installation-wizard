@@ -16,10 +16,14 @@ int populate_disk_options(StepOption *out_options, int max_count)
         if (count > max_count) count = max_count;
         for (int i = 0; i < count; i++)
         {
-            snprintf(out_options[i].value, sizeof(out_options[i].value),
-                     "%s", store->disks[i].value);
-            snprintf(out_options[i].label, sizeof(out_options[i].label),
-                     "%s", store->disks[i].label);
+            snprintf(
+                out_options[i].value, sizeof(out_options[i].value),
+                "%s", store->disks[i].value
+            );
+            snprintf(
+                out_options[i].label, sizeof(out_options[i].label),
+                "%s", store->disks[i].label
+            );
         }
         return count;
     }

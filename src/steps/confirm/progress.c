@@ -5,6 +5,10 @@
 
 #include "../../all.h"
 
+static int logs_visible = 0;
+
+static WINDOW *poll_modal = NULL;
+
 static const char *get_install_step_name(InstallStep step)
 {
     switch (step)
@@ -17,9 +21,6 @@ static const char *get_install_step_name(InstallStep step)
         default:              return "Processing";
     }
 }
-
-static int logs_visible = 0;
-static WINDOW *poll_modal = NULL;
 
 void set_logs_visible(int visible)
 {

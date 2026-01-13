@@ -30,14 +30,17 @@ void write_install_log_header(const char *step_name)
 
 char **read_install_log_lines(int max_lines, int *out_count)
 {
+    // Initialize output count to zero.
     *out_count = 0;
 
+    // Open log file for reading.
     FILE *f = fopen(INSTALL_LOG_PATH, "r");
     if (!f)
     {
         return NULL;
     }
 
+    // Allocate array to hold line pointers.
     char **lines = calloc(max_lines, sizeof(char *));
     if (!lines)
     {
@@ -45,9 +48,11 @@ char **read_install_log_lines(int max_lines, int *out_count)
         return NULL;
     }
 
+    // Initialize line buffer and counter.
     char line_buf[512];
     int line_count = 0;
 
+    // Read lines into circular buffer, keeping only the last max_lines.
     while (fgets(line_buf, sizeof(line_buf), f))
     {
         // Remove trailing newline.
@@ -57,7 +62,7 @@ char **read_install_log_lines(int max_lines, int *out_count)
             line_buf[len - 1] = '\0';
         }
 
-        // Circular buffer: free oldest line if buffer is full.
+        // Shift buffer and free oldest line if full.
         if (line_count >= max_lines)
         {
             free(lines[0]);
@@ -65,22 +70,22 @@ char **read_install_log_lines(int max_lines, int *out_count)
             line_count = max_lines - 1;
         }
 
+        // Store duplicate of current line.
         lines[line_count] = strdup(line_buf);
         line_count++;
     }
-    fclose(f);
 
+    // Close file and return results.
+    fclose(f);
     *out_count = line_count;
     return lines;
 }
 
 void free_install_log_lines(char **lines, int count)
 {
-    if (!lines)
-    {
-        return;
-    }
+    if (!lines) return;
 
+    // Free each line one-by-one.
     for (int i = 0; i < count; i++)
     {
         free(lines[i]);

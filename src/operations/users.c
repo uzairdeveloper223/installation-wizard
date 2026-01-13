@@ -21,12 +21,8 @@ static int set_hostname(const char *hostname)
         "echo %s > /mnt/etc/hostname",
         escaped_hostname
     );
-    if (run_command(command) != 0)
-    {
-        return -1;
-    }
 
-    return 0;
+    return run_command(command) == 0 ? 0 : -1;
 }
 
 static int create_user(const User *user)
@@ -35,7 +31,7 @@ static int create_user(const User *user)
     char escaped_username[256];
     if (shell_escape(user->username, escaped_username, sizeof(escaped_username)) != 0)
     {
-        return -2;
+        return -1;
     }
 
     // Create user with home directory and bash shell.
@@ -45,26 +41,24 @@ static int create_user(const User *user)
         "chroot /mnt useradd -m -s /bin/bash %s >>" INSTALL_LOG_PATH " 2>&1",
         escaped_username
     );
-    if (run_command(command) != 0)
-    {
-        return -2;
-    }
 
-    return 0;
+    return run_command(command) == 0 ? 0 : -1;
 }
 
 static int set_password(const User *user)
 {
-    // Escape username and password for shell safety.
+    // Escape username for shell safety.
     char escaped_username[256];
-    char escaped_password[512];
     if (shell_escape(user->username, escaped_username, sizeof(escaped_username)) != 0)
     {
-        return -3;
+        return -1;
     }
+
+    // Escape password for shell safety.
+    char escaped_password[512];
     if (shell_escape(user->password, escaped_password, sizeof(escaped_password)) != 0)
     {
-        return -3;
+        return -1;
     }
 
     // Set password using chpasswd.
@@ -74,12 +68,8 @@ static int set_password(const User *user)
         "chroot /mnt sh -c 'echo %s:%s | chpasswd' >>" INSTALL_LOG_PATH " 2>&1",
         escaped_username, escaped_password
     );
-    if (run_command(command) != 0)
-    {
-        return -3;
-    }
 
-    return 0;
+    return run_command(command) == 0 ? 0 : -1;
 }
 
 static int add_to_admin_group(const User *user)
@@ -88,7 +78,7 @@ static int add_to_admin_group(const User *user)
     char escaped_username[256];
     if (shell_escape(user->username, escaped_username, sizeof(escaped_username)) != 0)
     {
-        return -4;
+        return -1;
     }
 
     // Add user to sudo group.
@@ -98,30 +88,24 @@ static int add_to_admin_group(const User *user)
         "chroot /mnt usermod -aG sudo %s >>" INSTALL_LOG_PATH " 2>&1",
         escaped_username
     );
-    if (run_command(command) != 0)
-    {
-        return -4;
-    }
 
-    return 0;
+    return run_command(command) == 0 ? 0 : -1;
 }
 
 int configure_users(void)
 {
     Store *store = get_store();
-    int result;
 
     // Validate at least one user exists.
     if (store->user_count < 1)
     {
-        return -2;
+        return -1;
     }
 
     // Set hostname on target system.
-    result = set_hostname(store->hostname);
-    if (result != 0)
+    if (set_hostname(store->hostname) != 0)
     {
-        return result;
+        return -2;
     }
 
     // Configure each user account.
@@ -130,26 +114,23 @@ int configure_users(void)
         User *user = &store->users[i];
 
         // Create user account.
-        result = create_user(user);
-        if (result != 0)
+        if (create_user(user) != 0)
         {
-            return result;
+            return -3;
         }
 
         // Set user password.
-        result = set_password(user);
-        if (result != 0)
+        if (set_password(user) != 0)
         {
-            return result;
+            return -4;
         }
 
         // Add to sudo group if admin.
         if (user->is_admin)
         {
-            result = add_to_admin_group(user);
-            if (result != 0)
+            if (add_to_admin_group(user) != 0)
             {
-                return result;
+                return -5;
             }
         }
     }
