@@ -553,7 +553,7 @@ int adjust_scroll_offset(int *out_scroll_offset, int item_count, int max_visible
     return max_scroll;
 }
 
-void show_error_dialog(WINDOW *modal, const char *title, const char *message)
+void show_notice(WINDOW *modal, NoticeType type, const char *title, const char *message)
 {
     // Clear modal and render dialog title.
     clear_modal(modal);
@@ -561,12 +561,25 @@ void show_error_dialog(WINDOW *modal, const char *title, const char *message)
     mvwprintw(modal, 2, 3, "%s", title);
     wattroff(modal, A_BOLD);
 
-    // Render error message and footer.
-    render_error(modal, 5, 3, message);
-    const char *footer[] = { "[Enter] OK", NULL };
+    // Render message based on notice type.
+    switch (type)
+    {
+        case NOTICE_INFO:
+            render_info(modal, 5, 3, message);
+            break;
+        case NOTICE_WARNING:
+            render_warning(modal, 5, 3, message);
+            break;
+        case NOTICE_ERROR:
+            render_error(modal, 5, 3, message);
+            break;
+    }
+
+    const char *footer[] = { "[Enter/Esc] OK", NULL };
     render_footer(modal, footer);
     wrefresh(modal);
 
-    // Wait for Enter key.
-    while (getch() != '\n');
+    // Wait for Enter or Escape key.
+    int key;
+    while ((key = getch()) != '\n' && key != 27);
 }

@@ -223,6 +223,9 @@ static int run_partition_form(
             // Block submission if there's a duplicate mount point.
             if (duplicate)
             {
+                show_notice(modal, NOTICE_ERROR, "Duplicate Mount Point",
+                    "Another partition already uses this mount point.\n"
+                    "Choose a different mount point.");
                 continue;
             }
             return 1;
@@ -303,7 +306,7 @@ int add_partition_dialog(
     // Check if maximum partition count has been reached.
     if (store->partition_count >= STORE_MAX_PARTITIONS)
     {
-        show_error_dialog(modal, "Add Partition",
+        show_notice(modal, NOTICE_ERROR, "Add Partition",
             "Maximum partition limit reached.\n"
             "Remove a partition before adding a new one.");
         return 0;
@@ -317,7 +320,7 @@ int add_partition_dialog(
     // Check if free space is below minimum partition size.
     if (free_space < MIN_PARTITION_SIZE)
     {
-        show_error_dialog(modal, "Add Partition",
+        show_notice(modal, NOTICE_ERROR, "Add Partition",
             "Insufficient free space on disk.\n"
             "Remove or resize a partition to continue.");
         return 0;

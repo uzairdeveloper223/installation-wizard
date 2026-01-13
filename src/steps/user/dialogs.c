@@ -364,7 +364,13 @@ static int run_user_form(
 
         if (key == '\n' || key == KEY_ENTER)
         {
-            if (valid_username && valid_password && !duplicate)
+            if (duplicate)
+            {
+                show_notice(modal, NOTICE_ERROR, "Duplicate Username",
+                    "Another user already has this username.\n"
+                    "Choose a different username.");
+            }
+            else if (valid_username && valid_password)
             {
                 strncpy(user->username, username_buffer, sizeof(user->username) - 1);
                 user->username[sizeof(user->username) - 1] = '\0';
@@ -516,7 +522,7 @@ int add_user_dialog(WINDOW *modal, Store *store)
     // Check if maximum user count has been reached.
     if (store->user_count >= STORE_MAX_USERS)
     {
-        show_error_dialog(modal, "Add User",
+        show_notice(modal, NOTICE_ERROR, "Add User",
             "Maximum user limit reached.\n"
             "Remove a user before adding a new one.");
         return 0;
@@ -545,7 +551,7 @@ int remove_user_dialog(WINDOW *modal, Store *store)
     // Prevent removal of the default user.
     if (store->user_count <= 1)
     {
-        show_error_dialog(modal, "Remove User",
+        show_notice(modal, NOTICE_ERROR, "Remove User",
             "Cannot remove the default user.\n"
             "At least one user must exist.");
         return 0;

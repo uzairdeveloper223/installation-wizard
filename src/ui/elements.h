@@ -227,10 +227,21 @@ void render_action_menu(
 int adjust_scroll_offset(int *out_scroll_offset, int item_count, int max_visible);
 
 /**
- * Shows an error dialog with a title and message, waiting for Enter.
+ * Notice types for dialog display.
+ */
+typedef enum
+{
+    NOTICE_INFO,
+    NOTICE_WARNING,
+    NOTICE_ERROR
+} NoticeType;
+
+/**
+ * Shows a notice dialog with a title and message, waiting for Enter.
  *
  * @param modal The modal window to display in.
+ * @param type The type of notice (info, warning, error).
  * @param title The dialog title.
- * @param message The error message (can contain newlines).
+ * @param message The notice message (can contain newlines).
  */
-void show_error_dialog(WINDOW *modal, const char *title, const char *message);
+void show_notice(WINDOW *modal, NoticeType type, const char *title, const char *message);
