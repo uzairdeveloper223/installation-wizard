@@ -367,8 +367,8 @@ static void test_has_duplicate_mount_point_allows_swap(void **state)
     store->partition_count = 1;
     strncpy(store->partitions[0].mount_point, "[swap]", STORE_MAX_MOUNT_LEN);
 
-    // Trying to add swap (index 4) - should be allowed.
-    int result = has_duplicate_mount_point(store, 4, -1);
+    // Trying to add swap (index 5) - should be allowed.
+    int result = has_duplicate_mount_point(store, 5, -1);
 
     assert_int_equal(0, result);
 }
@@ -381,8 +381,8 @@ static void test_has_duplicate_mount_point_allows_none(void **state)
     store->partition_count = 1;
     strncpy(store->partitions[0].mount_point, "[none]", STORE_MAX_MOUNT_LEN);
 
-    // Trying to add none (index 5) - should be allowed.
-    int result = has_duplicate_mount_point(store, 5, -1);
+    // Trying to add none (index 6) - should be allowed.
+    int result = has_duplicate_mount_point(store, 6, -1);
 
     assert_int_equal(0, result);
 }

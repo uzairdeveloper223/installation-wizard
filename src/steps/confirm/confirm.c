@@ -287,7 +287,7 @@ static void render_boot_validation_error(WINDOW *modal, BootValidationError err)
     {
         case BOOT_ERR_UEFI_NO_ESP:
             msg = "UEFI boot requires an EFI System Partition.\n"
-                  "Add: FAT32, Mount=/boot/efi, Flags=esp";
+                  "Add: Size=512MB, Mount=/boot/efi, Flags=esp";
             break;
         case BOOT_ERR_UEFI_ESP_NOT_FAT32:
             msg = "EFI System Partition must be FAT32.\n"
@@ -307,7 +307,7 @@ static void render_boot_validation_error(WINDOW *modal, BootValidationError err)
             break;
         case BOOT_ERR_BIOS_GPT_NO_BIOS_GRUB:
             msg = "GPT on BIOS requires a BIOS boot partition.\n"
-                  "Add: 1-2MB, No filesystem, Flags=bios_grub";
+                  "Add: Size=1MB, Mount=none, Flags=bios_grub";
             break;
         case BOOT_ERR_BIOS_GPT_BIOS_GRUB_HAS_FS:
             msg = "BIOS boot partition must have no filesystem.\n"

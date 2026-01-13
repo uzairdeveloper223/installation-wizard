@@ -116,7 +116,7 @@ semistatic int find_flag_index(int boot, int esp, int bios_grub)
 semistatic int has_duplicate_mount_point(Store *store, int mount_index, int edit_index)
 {
     // Skip check for swap and none (duplicates allowed).
-    if (mount_index == 4 || mount_index == 5)
+    if (mount_index == 5 || mount_index == 6)
     {
         return 0;
     }
@@ -326,14 +326,15 @@ int add_partition_dialog(
         return 0;
     }
 
+    // Format free space for display.
     char free_string[32];
     format_disk_size(free_space, free_string, sizeof(free_string));
 
     // Initialize form field indices with defaults.
     int size_index = DEFAULT_SIZE_INDEX;
-    int mount_index = 0;     // Default to /.
-    int type_index = 0;      // Default to primary.
-    int flag_index = 0;      // Default to none.
+    int mount_index = 0;
+    int type_index = 0;
+    int flag_index = 0;
 
     // Run the partition form.
     if (!run_partition_form(
@@ -357,7 +358,7 @@ int add_partition_dialog(
     }
 
     // Set mount point and filesystem based on selection.
-    if (mount_index == 4)
+    if (mount_index == 5)
     {
         snprintf(
             new_partition.mount_point,
@@ -366,7 +367,7 @@ int add_partition_dialog(
         );
         new_partition.filesystem = FS_SWAP;
     }
-    else if (mount_index == 5)
+    else if (mount_index == 6)
     {
         snprintf(
             new_partition.mount_point,
@@ -390,13 +391,20 @@ int add_partition_dialog(
     new_partition.flag_esp = (flag_index == 2);
     new_partition.flag_bios_grub = (flag_index == 3);
 
-    // ESP partitions must be FAT32.
+    // Override filesystem to FAT32 for ESP partitions.
     if (new_partition.flag_esp)
     {
         new_partition.filesystem = FS_FAT32;
     }
 
-    // Add partition to store and return success.
+    // Override filesystem and mount point for BIOS boot partitions.
+    if (new_partition.flag_bios_grub)
+    {
+        new_partition.filesystem = FS_NONE;
+        strncpy(new_partition.mount_point, "[none]", sizeof(new_partition.mount_point));
+    }
+
+    // Add partition to store.
     store->partitions[store->partition_count++] = new_partition;
     return 1;
 }
@@ -463,12 +471,12 @@ int edit_partition_dialog(
     }
 
     // Update mount point and filesystem.
-    if (mount_index == 4)
+    if (mount_index == 5)
     {
         snprintf(p->mount_point, sizeof(p->mount_point), "[swap]");
         p->filesystem = FS_SWAP;
     }
-    else if (mount_index == 5)
+    else if (mount_index == 6)
     {
         snprintf(p->mount_point, sizeof(p->mount_point), "[none]");
         p->filesystem = FS_NONE;
@@ -489,10 +497,17 @@ int edit_partition_dialog(
     p->flag_esp = (flag_index == 2);
     p->flag_bios_grub = (flag_index == 3);
 
-    // ESP partitions must be FAT32.
+    // Override filesystem to FAT32 for ESP partitions.
     if (p->flag_esp)
     {
         p->filesystem = FS_FAT32;
+    }
+
+    // Override filesystem and mount point for BIOS boot partitions.
+    if (p->flag_bios_grub)
+    {
+        p->filesystem = FS_NONE;
+        strncpy(p->mount_point, "[none]", sizeof(p->mount_point));
     }
 
     return 1;
