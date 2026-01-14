@@ -108,6 +108,9 @@ int main(int argc, char *argv[])
     // Run installation using settings from global state.
     int result = run_install(ncurses_install_progress, modal);
 
+    // Clear any buffered input before waiting.
+    flushinp();
+
     // Wait for final input before exiting.
     await_step_input(modal);
 
