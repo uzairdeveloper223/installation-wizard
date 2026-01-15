@@ -22,6 +22,17 @@ static int set_hostname(const char *hostname)
         escaped_hostname
     );
 
+    if (run_command(command) != 0)
+    {
+        return -1;
+    }
+
+    snprintf(
+        command, sizeof(command),
+        "printf '127.0.0.1\\tlocalhost\\n127.0.1.1\\t%s\\n' > /mnt/etc/hosts",
+        escaped_hostname
+    );
+
     return run_command(command) == 0 ? 0 : -1;
 }
 

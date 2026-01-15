@@ -40,6 +40,7 @@
 #include "operations/locale.h"
 #include "operations/cleanup.h"
 #include "operations/users.h"
+#include "operations/fstab.h"
 #include "steps/steps.h"
 #include "ui/ui.h"
 #include "ui/modal.h"

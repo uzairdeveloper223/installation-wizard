@@ -44,6 +44,16 @@ int run_install(install_progress_cb progress_cb, void *context)
     }
     NOTIFY(INSTALL_STEP_OK, STEP_ROOTFS, 0);
 
+    // Step 2b: Generate fstab for target system.
+    write_install_log_header("Generating fstab");
+    result = generate_fstab();
+    if (result != 0)
+    {
+        NOTIFY(INSTALL_STEP_FAIL, STEP_ROOTFS, result);
+        cleanup_mounts();
+        return -2;
+    }
+
     // Step 3: Install and configure bootloader.
     write_install_log_header("Installing bootloader");
     NOTIFY(INSTALL_STEP_BEGIN, STEP_BOOTLOADER, 0);
