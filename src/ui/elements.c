@@ -67,7 +67,7 @@ void print_dim(WINDOW *window, int y, int x, const char *format, ...)
 
     // Print text with dimmed styling (use A_DIM on 8-color terminals).
     int attrs = COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM);
-    if (!ui_has_extended_colors())
+    if (!colors_has_extended())
     {
         attrs |= A_DIM;
     }
@@ -325,7 +325,7 @@ void render_form(
         if (field->readonly)
         {
             int dim_attrs = COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM);
-            if (!ui_has_extended_colors())
+            if (!colors_has_extended())
             {
                 dim_attrs |= A_DIM;
             }
@@ -350,7 +350,7 @@ void render_form(
         if (field->readonly)
         {
             int dim_attrs = COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM);
-            if (!ui_has_extended_colors())
+            if (!colors_has_extended())
             {
                 dim_attrs |= A_DIM;
             }
@@ -441,7 +441,7 @@ void render_footer(WINDOW *modal, const char **items)
 {
     // Compute dim attributes (use A_DIM on 8-color terminals).
     int dim_attrs = COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM);
-    if (!ui_has_extended_colors())
+    if (!colors_has_extended())
     {
         dim_attrs |= A_DIM;
     }

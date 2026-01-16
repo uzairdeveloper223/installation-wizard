@@ -46,6 +46,7 @@
 #include "ui/ui.h"
 #include "ui/modal.h"
 #include "ui/elements.h"
+#include "ui/colors.h"
 #include "steps/locale.h"
 #include "steps/disk.h"
 #include "steps/partition/table.h"
