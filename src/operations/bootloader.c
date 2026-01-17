@@ -124,36 +124,28 @@ static void unmount_chroot_system_dirs(void)
     run_command("umount /mnt/dev");
 }
 
-static int install_grub_packages(int is_uefi)
+static int install_grub_packages(void)
 {
-    const char *pkg_dir = is_uefi
-    ? "/usr/share/limeos/packages/efi"
-    : "/usr/share/limeos/packages/bios";
-    
-    // Escape the package directory path for shell command.
-    char escaped_dir[256];
-    if (shell_escape(pkg_dir, escaped_dir, sizeof(escaped_dir)) != 0)
-    {
-        return -7;
-    }
-    
-    // Copy all .deb files to chroot.
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "cp %s/*.deb /mnt/tmp/", escaped_dir);
-    if (run_command(cmd) != 0)
+    // Ensure target apt cache directory exists.
+    if (run_command("mkdir -p /mnt/var/cache/apt/archives >>" INSTALL_LOG_PATH " 2>&1") != 0)
     {
         return -7;
     }
 
-    // Install packages inside chroot.
-    if (run_command("chroot /mnt sh -c 'dpkg -i /tmp/*.deb' >>" INSTALL_LOG_PATH " 2>&1") != 0)
+    // Copy cached packages from live system to target.
+    if (run_command("cp /var/cache/apt/archives/*.deb /mnt/var/cache/apt/archives/ >>" INSTALL_LOG_PATH " 2>&1") != 0)
     {
-        run_command("rm -f /mnt/tmp/*.deb");
+        return -7;
+    }
+
+    // Install GRUB packages. Run dpkg twice: first pass unpacks all packages,
+    // second pass configures them in dependency order.
+    run_command("chroot /mnt dpkg -i /var/cache/apt/archives/*.deb >>" INSTALL_LOG_PATH " 2>&1");
+    if (run_command("chroot /mnt dpkg --configure -a >>" INSTALL_LOG_PATH " 2>&1") != 0)
+    {
         return -8;
     }
 
-    // Clean up package files.
-    run_command("rm -f /mnt/tmp/*.deb");
     return 0;
 }
 
@@ -245,7 +237,7 @@ int setup_bootloader(void)
     }
 
     // Install GRUB packages.
-    result = install_grub_packages(is_uefi);
+    result = install_grub_packages();
     if (result != 0)
     {
         return result;

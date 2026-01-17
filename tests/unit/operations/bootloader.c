@@ -134,7 +134,7 @@ static void test_setup_bootloader_verifies_chroot(void **state)
     assert_true(log_contains(lines, count, "rm -f '/mnt/tmp/.chroot_verify'"));
 }
 
-/** Verifies setup_bootloader() copies BIOS packages in BIOS mode. */
+/** Verifies setup_bootloader() copies packages from apt cache. */
 static void test_setup_bootloader_bios_copies_packages(void **state)
 {
     (void)state;
@@ -155,12 +155,11 @@ static void test_setup_bootloader_bios_copies_packages(void **state)
     char lines[64][512];
     int count = read_dry_run_log(lines, 64);
 
-    // BIOS mode should copy from BIOS packages directory.
-    assert_true(log_contains(lines, count, "/usr/share/limeos/packages/bios"));
-    assert_false(log_contains(lines, count, "/usr/share/limeos/packages/efi"));
+    // Should copy packages from apt cache to target.
+    assert_true(log_contains(lines, count, "cp /var/cache/apt/archives/*.deb /mnt/var/cache/apt/archives/"));
 }
 
-/** Verifies setup_bootloader() copies EFI packages in UEFI mode. */
+/** Verifies setup_bootloader() copies packages from apt cache in UEFI mode. */
 static void test_setup_bootloader_uefi_copies_packages(void **state)
 {
     (void)state;
@@ -189,9 +188,8 @@ static void test_setup_bootloader_uefi_copies_packages(void **state)
     char lines[64][512];
     int count = read_dry_run_log(lines, 64);
 
-    // UEFI mode should copy from EFI packages directory.
-    assert_true(log_contains(lines, count, "/usr/share/limeos/packages/efi"));
-    assert_false(log_contains(lines, count, "/usr/share/limeos/packages/bios"));
+    // Should copy packages from apt cache to target.
+    assert_true(log_contains(lines, count, "cp /var/cache/apt/archives/*.deb /mnt/var/cache/apt/archives/"));
 }
 
 /** Verifies setup_bootloader() installs packages via dpkg in chroot. */
@@ -215,10 +213,7 @@ static void test_setup_bootloader_installs_packages(void **state)
     int count = read_dry_run_log(lines, 64);
 
     // Should install packages via dpkg in chroot.
-    assert_true(log_contains(lines, count, "chroot /mnt sh -c 'dpkg -i /tmp/*.deb'"));
-
-    // Should clean up deb files after install.
-    assert_true(log_contains(lines, count, "rm -f /mnt/tmp/*.deb"));
+    assert_true(log_contains(lines, count, "dpkg -i /var/cache/apt/archives/*.deb"));
 }
 
 /** Verifies setup_bootloader() runs grub-install with disk path in BIOS mode. */
