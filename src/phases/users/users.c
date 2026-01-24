@@ -1,0 +1,154 @@
+/**
+ * This code is responsible for configuring user accounts and the hostname
+ * on the target system during installation.
+ */
+
+#include "../../all.h"
+
+static int set_hostname(const char *hostname)
+{
+    // Escape hostname for shell safety.
+    char escaped_hostname[256];
+    if (shell_escape(hostname, escaped_hostname, sizeof(escaped_hostname)) != 0)
+    {
+        return -1;
+    }
+
+    // Write hostname to target system.
+    char command[512];
+    snprintf(
+        command, sizeof(command),
+        "echo %s > /mnt/etc/hostname",
+        escaped_hostname
+    );
+
+    return run_command(command) == 0 ? 0 : -2;
+}
+
+static int create_user(const User *user)
+{
+    // Escape username for shell safety.
+    char escaped_username[256];
+    if (shell_escape(user->username, escaped_username, sizeof(escaped_username)) != 0)
+    {
+        return -1;
+    }
+
+    // Create user with home directory and bash shell.
+    char command[512];
+    snprintf(
+        command, sizeof(command),
+        "chroot /mnt useradd -m -s /bin/bash %s >>" CONFIG_INSTALL_LOG_PATH " 2>&1",
+        escaped_username
+    );
+
+    return run_command(command) == 0 ? 0 : -2;
+}
+
+static int set_password(const User *user)
+{
+    // Escape username for shell safety.
+    char escaped_username[256];
+    if (shell_escape(user->username, escaped_username, sizeof(escaped_username)) != 0)
+    {
+        return -1;
+    }
+
+    // Escape password for shell safety.
+    char escaped_password[512];
+    if (shell_escape(user->password, escaped_password, sizeof(escaped_password)) != 0)
+    {
+        return -2;
+    }
+
+    // Set password using chpasswd.
+    char command[1024];
+    snprintf(
+        command, sizeof(command),
+        "chroot /mnt sh -c 'echo %s:%s | chpasswd' >>" CONFIG_INSTALL_LOG_PATH " 2>&1",
+        escaped_username, escaped_password
+    );
+
+    return run_command(command) == 0 ? 0 : -3;
+}
+
+static int add_to_admin_group(const User *user)
+{
+    // Escape username for shell safety.
+    char escaped_username[256];
+    if (shell_escape(user->username, escaped_username, sizeof(escaped_username)) != 0)
+    {
+        return -1;
+    }
+
+    // Add user to sudo group.
+    char command[512];
+    snprintf(
+        command, sizeof(command),
+        "chroot /mnt usermod -aG sudo %s >>" CONFIG_INSTALL_LOG_PATH " 2>&1",
+        escaped_username
+    );
+
+    return run_command(command) == 0 ? 0 : -2;
+}
+
+int configure_users(void)
+{
+    Store *store = get_store();
+
+    // Validate at least one user exists.
+    if (store->user_count < 1)
+    {
+        write_install_log("No users configured");
+        return -1;
+    }
+
+    write_install_log("Configuring %d user account(s)", store->user_count);
+
+    // Set hostname on target system.
+    write_install_log("Setting hostname: %s", store->hostname);
+    if (set_hostname(store->hostname) != 0)
+    {
+        write_install_log("Failed to set hostname");
+        return -2;
+    }
+
+    // Configure each user account.
+    for (int i = 0; i < store->user_count; i++)
+    {
+        User *user = &store->users[i];
+
+        write_install_log("Configuring user %d/%d: %s (admin=%d)",
+            i + 1, store->user_count, user->username, user->is_admin);
+
+        // Create user account.
+        write_install_log("Creating user account: %s", user->username);
+        if (create_user(user) != 0)
+        {
+            write_install_log("Failed to create user: %s", user->username);
+            return -3;
+        }
+
+        // Set user password.
+        write_install_log("Setting password for: %s", user->username);
+        if (set_password(user) != 0)
+        {
+            write_install_log("Failed to set password for: %s", user->username);
+            return -4;
+        }
+
+        // Add to sudo group if admin.
+        if (user->is_admin)
+        {
+            write_install_log("Adding %s to sudo group", user->username);
+            if (add_to_admin_group(user) != 0)
+            {
+                write_install_log("Failed to add %s to sudo group", user->username);
+                return -5;
+            }
+        }
+    }
+
+    write_install_log("User configuration complete");
+    return 0;
+}

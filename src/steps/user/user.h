@@ -6,7 +6,8 @@
  * Allows users to configure username, hostname, and password.
  *
  * @param modal The modal window to display the step in.
+ * @param step_index The index of this step in the wizard (0-based).
  *
  * @return 1 if user confirmed and proceeded, 0 if user went back.
  */
-int run_user_step(WINDOW *modal);
+int run_user_step(WINDOW *modal, int step_index);

@@ -70,43 +70,24 @@ int main(int argc, char *argv[])
 
     // A loop that runs throughout the entire wizard process and waits for user
     // input at each step, allowing back-and-forth navigation between steps.
-    store->current_step = 1;
-    while (store->current_step <= 5)
+    int step_index = 0;
+    while (step_index < WIZARD_STEP_COUNT)
     {
-        int result = 0;
-
-        switch (store->current_step)
-        {
-            case 1:
-                result = run_locale_step(modal);
-                break;
-            case 2:
-                result = run_user_step(modal);
-                break;
-            case 3:
-                result = run_disk_step(modal);
-                break;
-            case 4:
-                result = run_partition_step(modal);
-                break;
-            case 5:
-                result = run_confirmation_step(modal);
-                break;
-        }
+        int result = wizard_steps[step_index].run(modal, step_index);
 
         if (result)
         {
-            store->current_step++;
+            step_index++;
         }
-        else if (store->current_step > 1)
+        else if (step_index > 0)
         {
-            store->current_step--;
+            step_index--;
         }
-        // If current_step == 1 and result == 0, stay on step 1.
+        // If step_index == 0 and result == 0, stay on first step.
     }
 
     // Run installation using settings from global state.
-    int result = run_install(ncurses_install_progress, modal);
+    int result = run_install(handle_install_progress, modal);
 
     // Clear any buffered input before waiting.
     flushinp();

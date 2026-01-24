@@ -1,0 +1,598 @@
+/**
+ * This code is responsible for testing the partition dialog helper functions.
+ * The helper functions are exposed via semistatic when TESTING is defined.
+ */
+
+#include "../../all.h"
+
+/** Sets up the test environment before each test. */
+static int setup(void **state)
+{
+    (void)state;
+    reset_store();
+    return 0;
+}
+
+/** Cleans up the test environment after each test. */
+static int teardown(void **state)
+{
+    (void)state;
+    return 0;
+}
+
+/** Verifies find_closest_size_index() returns 0 for minimum size. */
+static void test_find_closest_size_index_minimum(void **state)
+{
+    (void)state;
+
+    int result = find_closest_size_index(1ULL * 1000000); /* 1MB */
+
+    assert_int_equal(0, result);
+}
+
+/** Verifies find_closest_size_index() returns correct index for exact match. */
+static void test_find_closest_size_index_exact_match(void **state)
+{
+    (void)state;
+
+    // 512MB is at index 8
+    int result = find_closest_size_index(512ULL * 1000000);
+
+    assert_int_equal(8, result);
+}
+
+/** Verifies find_closest_size_index() returns last index for very large size. */
+static void test_find_closest_size_index_maximum(void **state)
+{
+    (void)state;
+
+    // 2TB should return max index (SIZE_COUNT - 1 = 18)
+    int result = find_closest_size_index(2000ULL * 1000000000);
+
+    assert_int_equal(18, result);
+}
+
+/** Verifies find_closest_size_index() rounds to closest preset (lower). */
+static void test_find_closest_size_index_rounds_down(void **state)
+{
+    (void)state;
+
+    // 300MB is between 128MB (index 7) and 512MB (index 8).
+    // 300 - 128 = 172, 512 - 300 = 212, so rounds to 128MB = index 7
+    int result = find_closest_size_index(300ULL * 1000000);
+
+    assert_int_equal(7, result);
+}
+
+/** Verifies find_closest_size_index() rounds to closest preset (upper). */
+static void test_find_closest_size_index_rounds_up(void **state)
+{
+    (void)state;
+
+    // 400MB is between 128MB and 512MB.
+    // 400 - 128 = 272, 512 - 400 = 112, so rounds to 512MB = index 8
+    int result = find_closest_size_index(400ULL * 1000000);
+
+    assert_int_equal(8, result);
+}
+
+/** Verifies find_closest_size_index() handles zero size. */
+static void test_find_closest_size_index_zero(void **state)
+{
+    (void)state;
+
+    int result = find_closest_size_index(0);
+
+    // Should return 0 (1MB preset).
+    assert_int_equal(0, result);
+}
+
+/** Verifies find_closest_size_index() handles 1GB. */
+static void test_find_closest_size_index_1gb(void **state)
+{
+    (void)state;
+
+    // 1GB is at index 9
+    int result = find_closest_size_index(1ULL * 1000000000);
+
+    assert_int_equal(9, result);
+}
+
+/** Verifies find_closest_size_index() handles 8GB. */
+static void test_find_closest_size_index_8gb(void **state)
+{
+    (void)state;
+
+    // 8GB is at index 12
+    int result = find_closest_size_index(8ULL * 1000000000);
+
+    assert_int_equal(12, result);
+}
+
+/** Verifies find_closest_size_index() handles size between 1GB and 2GB. */
+static void test_find_closest_size_index_1_5gb(void **state)
+{
+    (void)state;
+
+    // 1.5GB is between 1GB (index 9) and 2GB (index 10).
+    // 1.5 - 1 = 0.5, 2 - 1.5 = 0.5, exact middle, should round to higher.
+    int result = find_closest_size_index(1500ULL * 1000000);
+
+    assert_int_equal(10, result);
+}
+
+/** Verifies find_closest_size_index() handles 2MB exact. */
+static void test_find_closest_size_index_2mb(void **state)
+{
+    (void)state;
+
+    int result = find_closest_size_index(2ULL * 1000000);
+
+    assert_int_equal(1, result);
+}
+
+/** Verifies find_mount_index() returns 0 for root mount point. */
+static void test_find_mount_index_root(void **state)
+{
+    (void)state;
+
+    int result = find_mount_index("/");
+
+    assert_int_equal(0, result);
+}
+
+/** Verifies find_mount_index() returns 1 for /boot mount point. */
+static void test_find_mount_index_boot(void **state)
+{
+    (void)state;
+
+    int result = find_mount_index("/boot");
+
+    assert_int_equal(1, result);
+}
+
+/** Verifies find_mount_index() returns 2 for /boot/efi mount point. */
+static void test_find_mount_index_boot_efi(void **state)
+{
+    (void)state;
+
+    int result = find_mount_index("/boot/efi");
+
+    assert_int_equal(2, result);
+}
+
+/** Verifies find_mount_index() returns 3 for /home mount point. */
+static void test_find_mount_index_home(void **state)
+{
+    (void)state;
+
+    int result = find_mount_index("/home");
+
+    assert_int_equal(3, result);
+}
+
+/** Verifies find_mount_index() returns 4 for /var mount point. */
+static void test_find_mount_index_var(void **state)
+{
+    (void)state;
+
+    int result = find_mount_index("/var");
+
+    assert_int_equal(4, result);
+}
+
+/** Verifies find_mount_index() returns 5 for [swap] mount point. */
+static void test_find_mount_index_swap_bracket(void **state)
+{
+    (void)state;
+
+    int result = find_mount_index("[swap]");
+
+    assert_int_equal(5, result);
+}
+
+/** Verifies find_mount_index() returns 6 for [none] mount point. */
+static void test_find_mount_index_none_bracket(void **state)
+{
+    (void)state;
+
+    int result = find_mount_index("[none]");
+
+    assert_int_equal(6, result);
+}
+
+/** Verifies find_mount_index() returns 0 for unknown mount point. */
+static void test_find_mount_index_unknown(void **state)
+{
+    (void)state;
+
+    int result = find_mount_index("/unknown");
+
+    // Falls back to root (0).
+    assert_int_equal(0, result);
+}
+
+/** Verifies find_mount_index() handles "swap" without brackets. */
+static void test_find_mount_index_swap_option(void **state)
+{
+    (void)state;
+
+    int result = find_mount_index("swap");
+
+    // This matches mount_options[5] = "swap".
+    assert_int_equal(5, result);
+}
+
+/** Verifies find_mount_index() handles "none" without brackets. */
+static void test_find_mount_index_none_option(void **state)
+{
+    (void)state;
+
+    int result = find_mount_index("none");
+
+    // This matches mount_options[6] = "none".
+    assert_int_equal(6, result);
+}
+
+/** Verifies find_mount_index() handles empty string. */
+static void test_find_mount_index_empty(void **state)
+{
+    (void)state;
+
+    int result = find_mount_index("");
+
+    // Falls back to root (0).
+    assert_int_equal(0, result);
+}
+
+/** Verifies find_flag_index() returns 0 for no flags. */
+static void test_find_flag_index_none(void **state)
+{
+    (void)state;
+
+    int result = find_flag_index(0, 0, 0);
+
+    assert_int_equal(0, result);
+}
+
+/** Verifies find_flag_index() returns 1 for boot flag. */
+static void test_find_flag_index_boot(void **state)
+{
+    (void)state;
+
+    int result = find_flag_index(1, 0, 0);
+
+    assert_int_equal(1, result);
+}
+
+/** Verifies find_flag_index() returns 2 for ESP flag. */
+static void test_find_flag_index_esp(void **state)
+{
+    (void)state;
+
+    int result = find_flag_index(0, 1, 0);
+
+    assert_int_equal(2, result);
+}
+
+/** Verifies find_flag_index() returns 3 for BIOS GRUB flag. */
+static void test_find_flag_index_bios_grub(void **state)
+{
+    (void)state;
+
+    int result = find_flag_index(0, 0, 1);
+
+    assert_int_equal(3, result);
+}
+
+/** Verifies find_flag_index() prioritizes boot over esp. */
+static void test_find_flag_index_boot_priority(void **state)
+{
+    (void)state;
+
+    // When multiple flags are set, boot has priority.
+    int result = find_flag_index(1, 1, 0);
+
+    assert_int_equal(1, result);
+}
+
+/** Verifies find_flag_index() prioritizes esp over bios_grub. */
+static void test_find_flag_index_esp_priority(void **state)
+{
+    (void)state;
+
+    // When esp and bios_grub are set, esp has priority.
+    int result = find_flag_index(0, 1, 1);
+
+    assert_int_equal(2, result);
+}
+
+/** Verifies find_flag_index() prioritizes boot over all. */
+static void test_find_flag_index_boot_over_all(void **state)
+{
+    (void)state;
+
+    // When all flags are set, boot has priority.
+    int result = find_flag_index(1, 1, 1);
+
+    assert_int_equal(1, result);
+}
+
+/** Verifies has_duplicate_mount_point() returns 0 when no partitions. */
+static void test_has_duplicate_mount_point_empty(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 0;
+
+    int result = has_duplicate_mount_point(store, 0, -1);
+
+    assert_int_equal(0, result);
+}
+
+/** Verifies has_duplicate_mount_point() returns 0 with unique mounts. */
+static void test_has_duplicate_mount_point_unique(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 2;
+    strncpy(store->partitions[0].mount_point, "/", MAX_MOUNT_LEN);
+    strncpy(store->partitions[1].mount_point, "/home", MAX_MOUNT_LEN);
+
+    // Trying to add /boot (index 1).
+    int result = has_duplicate_mount_point(store, 1, -1);
+
+    assert_int_equal(0, result);
+}
+
+/** Verifies has_duplicate_mount_point() returns 1 with duplicate. */
+static void test_has_duplicate_mount_point_duplicate(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    strncpy(store->partitions[0].mount_point, "/", MAX_MOUNT_LEN);
+
+    // Trying to add / (index 0) which already exists.
+    int result = has_duplicate_mount_point(store, 0, -1);
+
+    assert_int_equal(1, result);
+}
+
+/** Verifies has_duplicate_mount_point() allows swap duplicates. */
+static void test_has_duplicate_mount_point_allows_swap(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    strncpy(store->partitions[0].mount_point, "[swap]", MAX_MOUNT_LEN);
+
+    // Trying to add swap (index 5) - should be allowed.
+    int result = has_duplicate_mount_point(store, 5, -1);
+
+    assert_int_equal(0, result);
+}
+
+/** Verifies has_duplicate_mount_point() allows none duplicates. */
+static void test_has_duplicate_mount_point_allows_none(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    strncpy(store->partitions[0].mount_point, "[none]", MAX_MOUNT_LEN);
+
+    // Trying to add none (index 6) - should be allowed.
+    int result = has_duplicate_mount_point(store, 6, -1);
+
+    assert_int_equal(0, result);
+}
+
+/** Verifies has_duplicate_mount_point() excludes partition being edited. */
+static void test_has_duplicate_mount_point_excludes_self(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 1;
+    strncpy(store->partitions[0].mount_point, "/", MAX_MOUNT_LEN);
+
+    // Editing partition 0 with / (index 0) - should not count as duplicate.
+    int result = has_duplicate_mount_point(store, 0, 0);
+
+    assert_int_equal(0, result);
+}
+
+/** Verifies has_duplicate_mount_point() detects duplicate when editing. */
+static void test_has_duplicate_mount_point_duplicate_when_editing(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+    store->partition_count = 2;
+    strncpy(store->partitions[0].mount_point, "/", MAX_MOUNT_LEN);
+    strncpy(store->partitions[1].mount_point, "/home", MAX_MOUNT_LEN);
+
+    // Editing partition 1 to / (index 0) - should detect duplicate.
+    int result = has_duplicate_mount_point(store, 0, 1);
+
+    assert_int_equal(1, result);
+}
+
+/** Verifies calculate_ideal_swap_size() returns 4GB for low RAM (4GB). */
+static void test_calculate_ideal_swap_size_low_ram(void **state)
+{
+    (void)state;
+
+    // 4GB RAM should return 4GB swap.
+    unsigned long long result = calculate_ideal_swap_size(4ULL * 1000000000);
+
+    assert_int_equal(4ULL * 1000000000, result);
+}
+
+/** Verifies calculate_ideal_swap_size() returns 4GB for 8GB RAM. */
+static void test_calculate_ideal_swap_size_8gb_ram(void **state)
+{
+    (void)state;
+
+    // 8GB RAM should return 4GB swap.
+    unsigned long long result = calculate_ideal_swap_size(8ULL * 1000000000);
+
+    assert_int_equal(4ULL * 1000000000, result);
+}
+
+/** Verifies calculate_ideal_swap_size() returns 4GB for 16GB RAM. */
+static void test_calculate_ideal_swap_size_16gb_ram(void **state)
+{
+    (void)state;
+
+    // 16GB RAM should return 4GB swap.
+    unsigned long long result = calculate_ideal_swap_size(16ULL * 1000000000);
+
+    assert_int_equal(4ULL * 1000000000, result);
+}
+
+/** Verifies calculate_ideal_swap_size() returns 4GB for 32GB RAM. */
+static void test_calculate_ideal_swap_size_32gb_ram(void **state)
+{
+    (void)state;
+
+    // 32GB RAM should return 4GB swap.
+    unsigned long long result = calculate_ideal_swap_size(32ULL * 1000000000);
+
+    assert_int_equal(4ULL * 1000000000, result);
+}
+
+/** Verifies autofill_partitions() creates a root partition. */
+static void test_autofill_partitions_creates_root(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+
+    // Run autofill with 100GB disk.
+    autofill_partitions(store, 100ULL * 1000000000);
+
+    // Should have at least one partition.
+    assert_true(store->partition_count >= 1);
+
+    // Find root partition.
+    int found_root = 0;
+    for (int i = 0; i < store->partition_count; i++)
+    {
+        if (strcmp(store->partitions[i].mount_point, "/") == 0)
+        {
+            found_root = 1;
+            assert_int_equal(FS_EXT4, store->partitions[i].filesystem);
+            break;
+        }
+    }
+    assert_true(found_root);
+}
+
+/** Verifies autofill_partitions() creates a swap partition. */
+static void test_autofill_partitions_creates_swap(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+
+    // Run autofill with 100GB disk.
+    autofill_partitions(store, 100ULL * 1000000000);
+
+    // Find swap partition.
+    int found_swap = 0;
+    for (int i = 0; i < store->partition_count; i++)
+    {
+        if (strcmp(store->partitions[i].mount_point, "[swap]") == 0)
+        {
+            found_swap = 1;
+            assert_int_equal(FS_SWAP, store->partitions[i].filesystem);
+            break;
+        }
+    }
+    assert_true(found_swap);
+}
+
+/** Verifies autofill_partitions() clears existing partitions. */
+static void test_autofill_partitions_clears_existing(void **state)
+{
+    (void)state;
+    Store *store = get_store();
+
+    // Add some existing partitions.
+    store->partition_count = 2;
+    strncpy(store->partitions[0].mount_point, "/old", MAX_MOUNT_LEN);
+    strncpy(store->partitions[1].mount_point, "/old2", MAX_MOUNT_LEN);
+
+    // Run autofill.
+    autofill_partitions(store, 100ULL * 1000000000);
+
+    // Old partitions should be gone.
+    int found_old = 0;
+    for (int i = 0; i < store->partition_count; i++)
+    {
+        if (strstr(store->partitions[i].mount_point, "old") != NULL)
+        {
+            found_old = 1;
+            break;
+        }
+    }
+    assert_false(found_old);
+}
+
+int main(void)
+{
+    const struct CMUnitTest tests[] = {
+        // find_closest_size_index tests
+        cmocka_unit_test_setup_teardown(test_find_closest_size_index_minimum, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_closest_size_index_exact_match, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_closest_size_index_maximum, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_closest_size_index_rounds_down, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_closest_size_index_rounds_up, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_closest_size_index_zero, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_closest_size_index_1gb, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_closest_size_index_8gb, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_closest_size_index_1_5gb, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_closest_size_index_2mb, setup, teardown),
+
+        // find_mount_index tests
+        cmocka_unit_test_setup_teardown(test_find_mount_index_root, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_mount_index_boot, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_mount_index_boot_efi, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_mount_index_home, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_mount_index_var, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_mount_index_swap_bracket, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_mount_index_none_bracket, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_mount_index_unknown, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_mount_index_swap_option, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_mount_index_none_option, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_mount_index_empty, setup, teardown),
+
+        // find_flag_index tests
+        cmocka_unit_test_setup_teardown(test_find_flag_index_none, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_flag_index_boot, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_flag_index_esp, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_flag_index_bios_grub, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_flag_index_boot_priority, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_flag_index_esp_priority, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_find_flag_index_boot_over_all, setup, teardown),
+
+        // has_duplicate_mount_point tests
+        cmocka_unit_test_setup_teardown(test_has_duplicate_mount_point_empty, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_has_duplicate_mount_point_unique, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_has_duplicate_mount_point_duplicate, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_has_duplicate_mount_point_allows_swap, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_has_duplicate_mount_point_allows_none, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_has_duplicate_mount_point_excludes_self, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_has_duplicate_mount_point_duplicate_when_editing, setup, teardown),
+
+        // calculate_ideal_swap_size tests
+        cmocka_unit_test_setup_teardown(test_calculate_ideal_swap_size_low_ram, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_calculate_ideal_swap_size_8gb_ram, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_calculate_ideal_swap_size_16gb_ram, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_calculate_ideal_swap_size_32gb_ram, setup, teardown),
+
+        // autofill_partitions tests
+        cmocka_unit_test_setup_teardown(test_autofill_partitions_creates_root, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_autofill_partitions_creates_swap, setup, teardown),
+        cmocka_unit_test_setup_teardown(test_autofill_partitions_clears_existing, setup, teardown),
+    };
+
+    return cmocka_run_group_tests(tests, NULL, NULL);
+}

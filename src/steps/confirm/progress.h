@@ -2,49 +2,34 @@
 #include "../../all.h"
 
 /**
- * ncurses-based progress callback for installation.
- * Displays progress in a modal window.
+ * Handles installation progress events in an ncurses modal window.
  *
- * @param event Progress event type.
- * @param step Installation step identifier.
- * @param error_code Error code for failure events.
- * @param context Must be a valid WINDOW* pointer.
+ * @param event The progress event type.
+ * @param phase_index The installation phase index (0-based).
+ * @param error_code The error code for failure events.
+ * @param context A valid WINDOW* pointer.
  */
-void ncurses_install_progress(
+void handle_install_progress(
     InstallEvent event,
-    InstallStep step,
+    int phase_index,
     int error_code,
     void *context
 );
 
-/**
- * Sets the visibility of the installation logs viewer.
- *
- * @param visible Non-zero to show logs, zero to hide.
- */
+/** Sets the visibility of the installation logs viewer. */
 void set_logs_visible(int visible);
 
-/**
- * Gets the current visibility state of the installation logs viewer.
- *
- * @return Non-zero if logs are visible, zero otherwise.
- */
+/** Gets the current visibility state of the installation logs viewer. */
 int get_logs_visible(void);
 
-/**
- * Toggles the visibility of the installation logs viewer.
- */
+/** Toggles the visibility of the installation logs viewer. */
 void toggle_logs_visible(void);
 
-/**
- * Sets the modal window used for polling during command execution.
- *
- * @param modal The modal window to refresh when toggling logs.
- */
-void set_install_poll_modal(void *modal);
+/** Sets the modal window used for tick updates during command execution. */
+void set_install_tick_modal(void *modal);
 
 /**
- * Callback for polling input during command execution.
- * Handles backtick key to toggle log visibility.
+ * Periodic tick handler for installation progress.
+ * Handles input checking and animation updates.
  */
-void install_poll_callback(void);
+void tick_install(void);

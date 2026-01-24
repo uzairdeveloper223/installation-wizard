@@ -376,14 +376,14 @@ static void render_ready_message(WINDOW *modal, Store *store)
     render_footer(modal, footer);
 }
 
-int run_confirmation_step(WINDOW *modal)
+int run_confirmation_step(WINDOW *modal, int step_index)
 {
     Store *store = get_store();
 
     // Clear and draw step header.
     clear_modal(modal);
-    wattron(modal, A_BOLD | COLOR_PAIR(CUSTOM_COLOR_PAIR_MAIN));
-    mvwprintw(modal, 2, 3, "Step 5: Confirm Installation");
+    wattron(modal, A_BOLD | COLOR_PAIR(COLOR_PAIR_MAIN));
+    mvwprintw(modal, 2, 3, "Step %d: %s", step_index + 1, wizard_steps[step_index].display_name);
     wattroff(modal, A_BOLD);
 
     // Render configuration summary.

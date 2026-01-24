@@ -6,8 +6,6 @@
 
 #include "../../all.h"
 
-#define USER_STEP_NUM 2
-
 // Generates a hostname from the given username and chassis type.
 static void generate_hostname(
     const char *username, char *out_hostname, size_t out_hostname_size
@@ -17,7 +15,7 @@ static void generate_hostname(
     snprintf(out_hostname, out_hostname_size, "%s-%s", username, get_default_hostname_suffix());
 }
 
-int run_user_step(WINDOW *modal)
+int run_user_step(WINDOW *modal, int step_index)
 {
     // Get the global store.
     Store *store = get_store();
@@ -53,7 +51,7 @@ int run_user_step(WINDOW *modal)
         // Clear modal and render step header.
         clear_modal(modal);
         wattron(modal, A_BOLD);
-        mvwprintw(modal, 2, 3, "Step %d: Users", USER_STEP_NUM);
+        mvwprintw(modal, 2, 3, "Step %d: %s", step_index + 1, wizard_steps[step_index].display_name);
         wattroff(modal, A_BOLD);
 
         // Render the user table.
@@ -93,7 +91,7 @@ int run_user_step(WINDOW *modal)
                 if (strcmp(actions[action_selected].value, "edit") == 0)
                 {
                     // Capture old primary username to detect changes.
-                    char old_primary_username[STORE_MAX_USERNAME_LEN];
+                    char old_primary_username[MAX_USERNAME_LEN];
                     strncpy(old_primary_username, store->users[0].username, sizeof(old_primary_username) - 1);
                     old_primary_username[sizeof(old_primary_username) - 1] = '\0';
 
@@ -112,7 +110,7 @@ int run_user_step(WINDOW *modal)
                 else if (strcmp(actions[action_selected].value, "remove") == 0)
                 {
                     // Capture old primary username to detect changes.
-                    char old_primary_username[STORE_MAX_USERNAME_LEN];
+                    char old_primary_username[MAX_USERNAME_LEN];
                     strncpy(old_primary_username, store->users[0].username, sizeof(old_primary_username) - 1);
                     old_primary_username[sizeof(old_primary_username) - 1] = '\0';
 

@@ -6,8 +6,8 @@
 
 void initialize_ui(void)
 {
-    // Set console palette via escape sequences before ncurses takes control.
-    colors_init_console_palette();
+    // Set custom palette before ncurses takes over the terminal.
+    init_colors_palette();
 
     // Initialize ncurses with input handling and hidden cursor.
     initscr();
@@ -22,7 +22,8 @@ void initialize_ui(void)
     {
         start_color();
         use_default_colors();
-        colors_init_pairs();
+        init_colors_pairs();
+        bkgd(COLOR_PAIR(COLOR_PAIR_SCREEN_BG));
     }
 
     // Apply initial screen state.
@@ -32,5 +33,5 @@ void initialize_ui(void)
 void cleanup_ui(void)
 {
     endwin();
-    colors_cleanup();
+    cleanup_colors();
 }

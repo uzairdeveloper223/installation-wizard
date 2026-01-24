@@ -17,8 +17,7 @@
 #define SPINNER_WIDTH 3
 
 /** A type representing a text input field for forms. */
-typedef struct
-{
+typedef struct {
     const char *label;
     char *buffer;
     size_t buffer_size;
@@ -267,8 +266,8 @@ static int run_user_form(
 )
 {
     // Copy current user data to local buffers.
-    char username_buffer[STORE_MAX_USERNAME_LEN];
-    char password_buffer[STORE_MAX_PASSWORD_LEN];
+    char username_buffer[MAX_USERNAME_LEN];
+    char password_buffer[MAX_PASSWORD_LEN];
     strncpy(username_buffer, user->username, sizeof(username_buffer) - 1);
     username_buffer[sizeof(username_buffer) - 1] = '\0';
     strncpy(password_buffer, user->password, sizeof(password_buffer) - 1);
@@ -384,13 +383,13 @@ static int run_user_form(
                 user->password[sizeof(user->password) - 1] = '\0';
 
                 user->is_admin = (fields[TEXT_FIELD_ADMIN].spinner_current == 1);
-                return 1;
+                return 0;
             }
         }
         // Handle escape key to cancel form.
         else if (key == 27)
         {
-            return 0;
+            return -1;
         }
         // Handle up arrow to move focus up.
         else if (key == KEY_UP)
@@ -515,14 +514,14 @@ int edit_user_dialog(WINDOW *modal, Store *store)
     // Return early if there are no users to edit.
     if (store->user_count == 0)
     {
-        return 0;
+        return -1;
     }
 
     // Let user select which user to edit.
     int selected = select_user(modal, store, "Edit User - Select", 1);
     if (selected < 0)
     {
-        return 0;
+        return -2;
     }
 
     // Build dialog title with user number.
@@ -530,20 +529,25 @@ int edit_user_dialog(WINDOW *modal, Store *store)
     snprintf(title, sizeof(title), "Edit User %d", selected + 1);
 
     // Pass is_primary_user flag for the first user.
-    return run_user_form(
+    if (run_user_form(
         modal, title, &store->users[selected], 0, selected == 0, store, selected
-    );
+    ) != 0)
+    {
+        return -3;
+    }
+
+    return 0;
 }
 
 int add_user_dialog(WINDOW *modal, Store *store)
 {
     // Check if maximum user count has been reached.
-    if (store->user_count >= STORE_MAX_USERS)
+    if (store->user_count >= MAX_USERS)
     {
         show_notice(modal, NOTICE_ERROR, "Add User",
             "Maximum user limit reached.\n"
             "Remove a user before adding a new one.");
-        return 0;
+        return -1;
     }
 
     // Create new user with defaults.
@@ -554,14 +558,14 @@ int add_user_dialog(WINDOW *modal, Store *store)
 
     // Run the user form and return if cancelled.
     // New users are never the primary user.
-    if (!run_user_form(modal, "Add User", &new_user, 1, 0, store, -1))
+    if (run_user_form(modal, "Add User", &new_user, 1, 0, store, -1) != 0)
     {
-        return 0;
+        return -2;
     }
 
     // Add the new user to the store.
     store->users[store->user_count++] = new_user;
-    return 1;
+    return 0;
 }
 
 int remove_user_dialog(WINDOW *modal, Store *store)
@@ -572,14 +576,14 @@ int remove_user_dialog(WINDOW *modal, Store *store)
         show_notice(modal, NOTICE_ERROR, "Remove User",
             "Cannot remove the primary user.\n"
             "At least one user must exist.");
-        return 0;
+        return -1;
     }
 
     // Let user select which user to remove.
     int selected = select_user(modal, store, "Remove User - Select", 0);
     if (selected < 0)
     {
-        return 0;
+        return -2;
     }
 
     // Shift remaining users down.
@@ -589,5 +593,5 @@ int remove_user_dialog(WINDOW *modal, Store *store)
     }
     store->user_count--;
 
-    return 1;
+    return 0;
 }

@@ -5,7 +5,7 @@
 
 #include "../../all.h"
 
-const char *fs_to_string(PartitionFS fs)
+const char *convert_fs_to_string(PartitionFS fs)
 {
     switch (fs)
     {
@@ -17,7 +17,7 @@ const char *fs_to_string(PartitionFS fs)
     }
 }
 
-const char *type_to_string(PartitionType type)
+const char *convert_type_to_string(PartitionType type)
 {
     switch (type)
     {
@@ -61,7 +61,7 @@ void render_partition_table(
     }
 
     // Render column headers with darker background.
-    wattron(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_HEADER));
+    wattron(modal, COLOR_PAIR(COLOR_PAIR_HEADER));
     char header[64];
     snprintf(
         header, sizeof(header),
@@ -73,7 +73,7 @@ void render_partition_table(
         COL_WIDTH_FLAGS, "Flags"
     );
     mvwprintw(modal, 6, 3, "%-*s", table_width, header);
-    wattroff(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_HEADER));
+    wattroff(modal, COLOR_PAIR(COLOR_PAIR_HEADER));
 
     // Render partition rows.
     for (int i = 0; i < MAX_VISIBLE_PARTITIONS; i++)
@@ -81,7 +81,7 @@ void render_partition_table(
         int part_index = scroll_offset + i;
 
         // Apply alternating row background color.
-        int row_color = (part_index % 2 == 0) ? CUSTOM_COLOR_PAIR_ROW_ODD : CUSTOM_COLOR_PAIR_ROW_EVEN;
+        int row_color = (part_index % 2 == 0) ? COLOR_PAIR_ROW : COLOR_PAIR_ROW;
         wattron(modal, COLOR_PAIR(row_color));
 
         if (part_index < store->partition_count)
@@ -114,8 +114,8 @@ void render_partition_table(
                 COL_WIDTH_NUM, part_index + 1,
                 COL_WIDTH_SIZE, size_string,
                 COL_WIDTH_MOUNT, mount,
-                COL_WIDTH_FS, fs_to_string(p->filesystem),
-                COL_WIDTH_TYPE, type_to_string(p->type),
+                COL_WIDTH_FS, convert_fs_to_string(p->filesystem),
+                COL_WIDTH_TYPE, convert_type_to_string(p->type),
                 COL_WIDTH_FLAGS, flags
             );
             mvwprintw(modal, 7 + i, 3, "%-*s", table_width, row);

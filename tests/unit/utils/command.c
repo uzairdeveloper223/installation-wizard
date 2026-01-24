@@ -11,7 +11,7 @@ static int setup(void **state)
     (void)state;
     reset_store();
     close_dry_run_log();
-    unlink(DRY_RUN_LOG_PATH);
+    unlink(CONFIG_DRY_RUN_LOG_PATH);
     return 0;
 }
 
@@ -20,7 +20,7 @@ static int teardown(void **state)
 {
     (void)state;
     close_dry_run_log();
-    unlink(DRY_RUN_LOG_PATH);
+    unlink(CONFIG_DRY_RUN_LOG_PATH);
     return 0;
 }
 
@@ -48,7 +48,7 @@ static void test_run_command_dry_run_creates_log_file(void **state)
     close_dry_run_log();
 
     // Verify log file was created.
-    FILE *file = fopen(DRY_RUN_LOG_PATH, "r");
+    FILE *file = fopen(CONFIG_DRY_RUN_LOG_PATH, "r");
     assert_non_null(file);
     fclose(file);
 }
@@ -64,7 +64,7 @@ static void test_run_command_dry_run_logs_command(void **state)
     close_dry_run_log();
 
     // Read log file and verify command was written.
-    FILE *file = fopen(DRY_RUN_LOG_PATH, "r");
+    FILE *file = fopen(CONFIG_DRY_RUN_LOG_PATH, "r");
     assert_non_null(file);
 
     char buffer[256];
@@ -89,7 +89,7 @@ static void test_run_command_dry_run_logs_multiple_commands(void **state)
     close_dry_run_log();
 
     // Count lines in log file.
-    FILE *file = fopen(DRY_RUN_LOG_PATH, "r");
+    FILE *file = fopen(CONFIG_DRY_RUN_LOG_PATH, "r");
     assert_non_null(file);
 
     char buffer[256];
@@ -141,7 +141,7 @@ static void test_run_command_not_dry_run_no_log_file(void **state)
     run_command("true");
 
     // Verify no log file was created in normal mode.
-    assert_int_not_equal(0, access(DRY_RUN_LOG_PATH, F_OK));
+    assert_int_not_equal(0, access(CONFIG_DRY_RUN_LOG_PATH, F_OK));
 }
 
 /**
@@ -162,7 +162,7 @@ static void test_close_dry_run_log_safe_when_not_open(void **state)
     run_command("test command after close");
     close_dry_run_log();
 
-    FILE *file = fopen(DRY_RUN_LOG_PATH, "r");
+    FILE *file = fopen(CONFIG_DRY_RUN_LOG_PATH, "r");
     assert_non_null(file);
 
     char buffer[256];
@@ -184,7 +184,7 @@ static void test_close_dry_run_log_flushes_content(void **state)
     close_dry_run_log();
 
     // Verify content was flushed to disk.
-    FILE *file = fopen(DRY_RUN_LOG_PATH, "r");
+    FILE *file = fopen(CONFIG_DRY_RUN_LOG_PATH, "r");
     assert_non_null(file);
 
     char buffer[256];

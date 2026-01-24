@@ -7,7 +7,10 @@
  * @param modal The modal window to display the dialog in.
  * @param store The global store containing users.
  *
- * @return 1 if user was updated, 0 if cancelled.
+ * @return - `0` - Indicates user was updated.
+ * @return - `-1` - Indicates no users to edit.
+ * @return - `-2` - Indicates user cancelled selection.
+ * @return - `-3` - Indicates user cancelled form.
  */
 int edit_user_dialog(WINDOW *modal, Store *store);
 
@@ -17,7 +20,9 @@ int edit_user_dialog(WINDOW *modal, Store *store);
  * @param modal The modal window to display the dialog in.
  * @param store The global store containing users.
  *
- * @return 1 if user was added, 0 if cancelled.
+ * @return - `0` - Indicates user was added.
+ * @return - `-1` - Indicates maximum user limit reached.
+ * @return - `-2` - Indicates user cancelled form.
  */
 int add_user_dialog(WINDOW *modal, Store *store);
 
@@ -28,6 +33,8 @@ int add_user_dialog(WINDOW *modal, Store *store);
  * @param modal The modal window to display the dialog in.
  * @param store The global store containing users.
  *
- * @return 1 if user was removed, 0 if cancelled.
+ * @return - `0` - Indicates user was removed.
+ * @return - `-1` - Indicates cannot remove primary user.
+ * @return - `-2` - Indicates user cancelled selection.
  */
 int remove_user_dialog(WINDOW *modal, Store *store);

@@ -31,7 +31,7 @@
  *
  * @return String representation of the filesystem type.
  */
-const char *fs_to_string(PartitionFS fs);
+const char *convert_fs_to_string(PartitionFS fs);
 
 /**
  * Converts a partition type enum to its string representation.
@@ -40,7 +40,7 @@ const char *fs_to_string(PartitionFS fs);
  *
  * @return String representation of the partition type.
  */
-const char *type_to_string(PartitionType type);
+const char *convert_type_to_string(PartitionType type);
 
 /**
  * Renders the partition table in the modal window.

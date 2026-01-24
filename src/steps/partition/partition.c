@@ -5,9 +5,7 @@
 
 #include "../../all.h"
 
-#define PARTITION_STEP_NUM 4
-
-int run_partition_step(WINDOW *modal)
+int run_partition_step(WINDOW *modal, int step_index)
 {
     // Get store and use cached disk size for partition operations.
     Store *store = get_store();
@@ -36,7 +34,7 @@ int run_partition_step(WINDOW *modal)
         // Clear modal and render step header.
         clear_modal(modal);
         wattron(modal, A_BOLD);
-        mvwprintw(modal, 2, 3, "Step %d: Partitioning", PARTITION_STEP_NUM);
+        mvwprintw(modal, 2, 3, "Step %d: %s", step_index + 1, wizard_steps[step_index].display_name);
         wattroff(modal, A_BOLD);
 
         // Render the partition table.

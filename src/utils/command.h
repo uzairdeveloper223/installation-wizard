@@ -1,13 +1,10 @@
 #pragma once
 #include "../all.h"
 
-/** The path to the dry run log file. */
-#define DRY_RUN_LOG_PATH "dry-run.log"
-
 /**
  * Executes a shell command, or logs it if dry run mode is enabled.
  *
- * In dry run mode, commands are written to DRY_RUN_LOG_PATH instead of
+ * In dry run mode, commands are written to CONFIG_DRY_RUN_LOG_PATH instead of
  * being executed, and the function returns 0 (success).
  *
  * @param command The shell command to execute.
@@ -25,16 +22,17 @@ int run_command(const char *command);
  */
 void close_dry_run_log(void);
 
-/** Callback invoked during command execution for UI updates. */
-typedef void (*CommandPollCallback)(void);
+/** Callback invoked periodically during command execution. */
+typedef void (*CommandTickCallback)(void);
 
 /**
- * Sets a callback to be invoked during command execution.
- * The callback can handle input polling and UI updates.
+ * Sets a callback to be invoked periodically during command execution.
+ * The callback can handle input checking, animation updates, and other
+ * periodic tasks.
  *
- * @param callback Function to call during polling, or NULL to disable.
+ * @param callback Function to call on each tick, or NULL to disable.
  */
-void set_command_poll_callback(CommandPollCallback callback);
+void set_command_tick_callback(CommandTickCallback callback);
 
 /**
  * Escapes a string for safe use in shell commands.

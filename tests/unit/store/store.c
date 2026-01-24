@@ -40,16 +40,6 @@ static void test_get_store_returns_same_instance(void **state)
     assert_ptr_equal(store1, store2);
 }
 
-/** Verifies that reset_store() resets current_step to 1. */
-static void test_reset_store_clears_current_step(void **state)
-{
-    (void)state;
-    Store *store = get_store();
-    store->current_step = 5;
-    reset_store();
-    assert_int_equal(1, store->current_step);
-}
-
 /** Verifies that reset_store() resets dry_run flag to zero. */
 static void test_reset_store_clears_dry_run(void **state)
 {
@@ -65,7 +55,7 @@ static void test_reset_store_clears_locale(void **state)
 {
     (void)state;
     Store *store = get_store();
-    strncpy(store->locale, "en_US.UTF-8", STORE_MAX_LOCALE_LEN);
+    strncpy(store->locale, "en_US.UTF-8", MAX_LOCALE_LEN);
     reset_store();
     assert_string_equal("", store->locale);
 }
@@ -75,7 +65,7 @@ static void test_reset_store_clears_disk(void **state)
 {
     (void)state;
     Store *store = get_store();
-    strncpy(store->disk, "/dev/sda", STORE_MAX_DISK_LEN);
+    strncpy(store->disk, "/dev/sda", MAX_DISK_LEN);
     reset_store();
     assert_string_equal("", store->disk);
 }
@@ -97,7 +87,7 @@ static void test_reset_store_clears_partitions(void **state)
     Store *store = get_store();
     store->partitions[0].size_bytes = 1000000;
     store->partitions[0].flag_boot = 1;
-    strncpy(store->partitions[0].mount_point, "/boot", STORE_MAX_MOUNT_LEN);
+    strncpy(store->partitions[0].mount_point, "/boot", MAX_MOUNT_LEN);
 
     reset_store();
 
@@ -113,13 +103,13 @@ static void test_store_locale_max_length(void **state)
     Store *store = get_store();
 
     // Fill locale to maximum capacity (63 chars + null terminator).
-    char max_locale[STORE_MAX_LOCALE_LEN];
-    memset(max_locale, 'a', STORE_MAX_LOCALE_LEN - 1);
-    max_locale[STORE_MAX_LOCALE_LEN - 1] = '\0';
+    char max_locale[MAX_LOCALE_LEN];
+    memset(max_locale, 'a', MAX_LOCALE_LEN - 1);
+    max_locale[MAX_LOCALE_LEN - 1] = '\0';
 
-    strncpy(store->locale, max_locale, STORE_MAX_LOCALE_LEN);
+    strncpy(store->locale, max_locale, MAX_LOCALE_LEN);
 
-    assert_int_equal(STORE_MAX_LOCALE_LEN - 1, (int)strlen(store->locale));
+    assert_int_equal(MAX_LOCALE_LEN - 1, (int)strlen(store->locale));
 }
 
 int main(void)
@@ -127,7 +117,6 @@ int main(void)
     const struct CMUnitTest tests[] = {
         cmocka_unit_test_setup_teardown(test_get_store_returns_non_null, setup, teardown),
         cmocka_unit_test_setup_teardown(test_get_store_returns_same_instance, setup, teardown),
-        cmocka_unit_test_setup_teardown(test_reset_store_clears_current_step, setup, teardown),
         cmocka_unit_test_setup_teardown(test_reset_store_clears_dry_run, setup, teardown),
         cmocka_unit_test_setup_teardown(test_reset_store_clears_locale, setup, teardown),
         cmocka_unit_test_setup_teardown(test_reset_store_clears_disk, setup, teardown),

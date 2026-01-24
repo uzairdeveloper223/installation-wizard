@@ -228,11 +228,11 @@ static int run_partition_form(
                     "Choose a different mount point.");
                 continue;
             }
-            return 1;
+            return 0;
         }
         else if (result == FORM_CANCEL)
         {
-            return 0;
+            return -1;
         }
     }
 }
@@ -334,12 +334,12 @@ int add_partition_dialog(
 )
 {
     // Check if maximum partition count has been reached.
-    if (store->partition_count >= STORE_MAX_PARTITIONS)
+    if (store->partition_count >= MAX_PARTITIONS)
     {
         show_notice(modal, NOTICE_ERROR, "Add Partition",
             "Maximum partition limit reached.\n"
             "Remove a partition before adding a new one.");
-        return 0;
+        return -1;
     }
 
     // Calculate available free space on disk.
@@ -353,7 +353,7 @@ int add_partition_dialog(
         show_notice(modal, NOTICE_ERROR, "Add Partition",
             "Insufficient free space on disk.\n"
             "Remove or resize a partition to continue.");
-        return 0;
+        return -2;
     }
 
     // Format free space for display.
@@ -367,12 +367,12 @@ int add_partition_dialog(
     int flag_index = 0;
 
     // Run the partition form.
-    if (!run_partition_form(
+    if (run_partition_form(
         modal, "Add Partition", free_string, free_space, &size_index,
         &mount_index, &type_index, &flag_index, "Add", store, -1
-    ))
+    ) != 0)
     {
-        return 0;
+        return -3;
     }
 
     // Create new partition, clamping size to free space and minimum.
@@ -436,7 +436,7 @@ int add_partition_dialog(
 
     // Add partition to store.
     store->partitions[store->partition_count++] = new_partition;
-    return 1;
+    return 0;
 }
 
 int edit_partition_dialog(
@@ -446,7 +446,7 @@ int edit_partition_dialog(
     // Return early if there are no partitions to edit.
     if (store->partition_count == 0)
     {
-        return 0;
+        return -1;
     }
 
     // Let user select which partition to edit.
@@ -455,7 +455,7 @@ int edit_partition_dialog(
     );
     if (selected < 0)
     {
-        return 0;
+        return -2;
     }
 
     // Get pointer to selected partition.
@@ -480,13 +480,13 @@ int edit_partition_dialog(
     snprintf(title, sizeof(title), "Edit Partition %d", selected + 1);
 
     // Run the partition form.
-    if (!run_partition_form(
+    if (run_partition_form(
         modal, title, free_string, free_space,
         &size_index, &mount_index, &type_index, &flag_index, "Save",
         store, selected
-    ))
+    ) != 0)
     {
-        return 0;
+        return -3;
     }
 
     // Update partition size, clamping to free space and minimum.
@@ -540,7 +540,7 @@ int edit_partition_dialog(
         strncpy(p->mount_point, "[none]", sizeof(p->mount_point));
     }
 
-    return 1;
+    return 0;
 }
 
 int remove_partition_dialog(
@@ -550,7 +550,7 @@ int remove_partition_dialog(
     // Return early if there are no partitions to remove.
     if (store->partition_count == 0)
     {
-        return 0;
+        return -1;
     }
 
     // Let user select which partition to remove.
@@ -559,7 +559,7 @@ int remove_partition_dialog(
     );
     if (selected < 0)
     {
-        return 0;
+        return -2;
     }
 
     // Remove partition by shifting remaining partitions down.
@@ -569,7 +569,7 @@ int remove_partition_dialog(
     }
     store->partition_count--;
 
-    return 1;
+    return 0;
 }
 
 int autofill_partitions(Store *store, unsigned long long disk_size)
@@ -677,5 +677,5 @@ int autofill_partitions(Store *store, unsigned long long disk_size)
     // Add root partition to store.
     store->partitions[store->partition_count++] = root;
 
-    return 1;
+    return 0;
 }

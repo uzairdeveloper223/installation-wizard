@@ -8,8 +8,10 @@
  * @param store     The global store to add partition to.
  * @param disk_size Total disk size in bytes.
  *
- * @return - `1` - Indicates partition was added.
- * @return - `0` - Indicates cancelled.
+ * @return - `0` - Indicates partition was added.
+ * @return - `-1` - Indicates maximum partition limit reached.
+ * @return - `-2` - Indicates insufficient free space.
+ * @return - `-3` - Indicates user cancelled form.
  */
 int add_partition_dialog(
     WINDOW *modal, Store *store, unsigned long long disk_size
@@ -22,8 +24,10 @@ int add_partition_dialog(
  * @param store     The global store containing partitions.
  * @param disk_size Total disk size in bytes.
  *
- * @return - `1` - Indicates partition was modified.
- * @return - `0` - Indicates cancelled.
+ * @return - `0` - Indicates partition was modified.
+ * @return - `-1` - Indicates no partitions to edit.
+ * @return - `-2` - Indicates user cancelled selection.
+ * @return - `-3` - Indicates user cancelled form.
  */
 int edit_partition_dialog(
     WINDOW *modal, Store *store, unsigned long long disk_size
@@ -36,8 +40,9 @@ int edit_partition_dialog(
  * @param store     The global store containing partitions.
  * @param disk_size Total disk size in bytes.
  *
- * @return - `1` - Indicates partition was removed.
- * @return - `0` - Indicates cancelled.
+ * @return - `0` - Indicates partition was removed.
+ * @return - `-1` - Indicates no partitions to remove.
+ * @return - `-2` - Indicates user cancelled selection.
  */
 int remove_partition_dialog(
     WINDOW *modal, Store *store, unsigned long long disk_size
@@ -54,7 +59,6 @@ int remove_partition_dialog(
  * @param store     The global store to populate with partitions.
  * @param disk_size Total disk size in bytes.
  *
- * @return - `1` - Indicates partitions were created.
- * @return - `0` - Indicates autofill failed or was cancelled.
+ * @return - `0` - Indicates partitions were created.
  */
 int autofill_partitions(Store *store, unsigned long long disk_size);

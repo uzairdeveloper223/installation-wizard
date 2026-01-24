@@ -6,7 +6,6 @@
 #include "../all.h"
 
 static Store store = {
-    .current_step = 1,
     .dry_run = 0,
     .disk_label = DISK_LABEL_GPT,
     .locale = "",
@@ -31,8 +30,7 @@ Store *get_store(void)
 
 void reset_store(void)
 {
-    // Reset step and mode state.
-    store.current_step = 1;
+    // Reset mode state.
     store.dry_run = 0;
     store.disk_label = DISK_LABEL_GPT;
 

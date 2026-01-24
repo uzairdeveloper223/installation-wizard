@@ -2,9 +2,25 @@
 #include "../all.h"
 
 /** Maximum number of options in a selection list. */
-#define STEPS_MAX_OPTIONS STORE_MAX_OPTIONS
+#define STEPS_MAX_OPTIONS MAX_OPTIONS
 
-/** A type representing a single installation step. */
+/** A type representing a step execution function. */
+typedef int (*StepFunction)(WINDOW *modal, int step_index);
+
+/** A type representing a wizard step in the registry. */
+typedef struct
+{
+    const char *display_name;
+    StepFunction run;
+} WizardStep;
+
+/** The number of wizard steps. */
+#define WIZARD_STEP_COUNT 5
+
+/** The registry of all wizard steps. */
+extern const WizardStep wizard_steps[WIZARD_STEP_COUNT];
+
+/** A type representing a single installation step (legacy). */
 typedef struct
 {
     const char *name;

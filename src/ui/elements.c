@@ -65,12 +65,8 @@ void print_dim(WINDOW *window, int y, int x, const char *format, ...)
     va_list arguments;
     va_start(arguments, format);
 
-    // Print text with dimmed styling (use A_DIM on 8-color terminals).
-    int attrs = COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM);
-    if (!colors_has_extended())
-    {
-        attrs |= A_DIM;
-    }
+    // Print text with dimmed styling (always use A_DIM for dimmed text).
+    int attrs = COLOR_PAIR(COLOR_PAIR_DIM) | A_DIM;
 
     wattron(window, attrs);
     wmove(window, y, x);
@@ -87,10 +83,10 @@ void print_selected(WINDOW *window, int y, int x, const char *format, ...)
     va_start(arguments, format);
 
     // Print text with selected styling.
-    wattron(window, A_BOLD | COLOR_PAIR(CUSTOM_COLOR_PAIR_SELECTED));
+    wattron(window, A_BOLD | COLOR_PAIR(COLOR_PAIR_SELECTED));
     wmove(window, y, x);
     vw_printw(window, format, arguments);
-    wattroff(window, A_BOLD | COLOR_PAIR(CUSTOM_COLOR_PAIR_SELECTED));
+    wattroff(window, A_BOLD | COLOR_PAIR(COLOR_PAIR_SELECTED));
 
     va_end(arguments);
 }
@@ -120,7 +116,7 @@ void render_table(
     }
 
     // Render header row.
-    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_HEADER));
+    wattron(window, COLOR_PAIR(COLOR_PAIR_HEADER));
     int column_x = x;
     for (int column_index = 0; column_index < column_count; column_index++)
     {
@@ -138,7 +134,7 @@ void render_table(
     {
         wprintw(window, "%*s", remaining, "");
     }
-    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_HEADER));
+    wattroff(window, COLOR_PAIR(COLOR_PAIR_HEADER));
 
     // Calculate the number of visible rows.
     int visible_count = (row_count < max_visible) ? row_count : max_visible;
@@ -151,7 +147,7 @@ void render_table(
     for (int visible_index = 0; visible_index < visible_count; visible_index++)
     {
         int row_index = scroll_offset + visible_index;
-        int row_color = (row_index % 2 == 0) ? CUSTOM_COLOR_PAIR_ROW_ODD : CUSTOM_COLOR_PAIR_ROW_EVEN;
+        int row_color = (row_index % 2 == 0) ? COLOR_PAIR_ROW : COLOR_PAIR_ROW;
         int is_selected_row = (row_index == selected);
 
         // Apply row styling: reverse for selected, alternating colors otherwise.
@@ -234,12 +230,12 @@ static void render_styled_note(
 )
 {
     // Fill background area with slightly darker color.
-    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
+    wattron(window, COLOR_PAIR(COLOR_PAIR_NOTE));
     for (int row = 0; row < NOTE_HEIGHT; row++)
     {
         mvwprintw(window, y + row, x + 1, "%*s", MODAL_WIDTH - NOTE_MARGIN, "");
     }
-    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_BG));
+    wattroff(window, COLOR_PAIR(COLOR_PAIR_NOTE));
 
     // Draw accent line on the left.
     wattron(window, COLOR_PAIR(accent_color) | A_REVERSE);
@@ -257,7 +253,7 @@ static void render_styled_note(
     while (*line_start)
     {
         const char *line_end = strchr(line_start, '\n');
-        wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+        wattron(window, COLOR_PAIR(COLOR_PAIR_NOTE));
         if (line_end)
         {
             int len = line_end - line_start;
@@ -267,32 +263,32 @@ static void render_styled_note(
         else
         {
             mvwprintw(window, y + line_num, text_x, "%s", line_start);
-            wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+            wattroff(window, COLOR_PAIR(COLOR_PAIR_NOTE));
             break;
         }
-        wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_NOTE_TEXT));
+        wattroff(window, COLOR_PAIR(COLOR_PAIR_NOTE));
         line_num++;
     }
 }
 
 void render_note(WINDOW *window, int y, int x, const char *text)
 {
-    render_styled_note(window, y, x, text, CUSTOM_COLOR_PAIR_NOTE_TEXT);
+    render_styled_note(window, y, x, text, COLOR_PAIR_NOTE);
 }
 
 void render_info(WINDOW *window, int y, int x, const char *text)
 {
-    render_styled_note(window, y, x, text, CUSTOM_COLOR_PAIR_INFO_NOTE);
+    render_styled_note(window, y, x, text, COLOR_PAIR_INFO);
 }
 
 void render_warning(WINDOW *window, int y, int x, const char *text)
 {
-    render_styled_note(window, y, x, text, CUSTOM_COLOR_PAIR_WARNING_NOTE);
+    render_styled_note(window, y, x, text, COLOR_PAIR_WARNING);
 }
 
 void render_error(WINDOW *window, int y, int x, const char *text)
 {
-    render_styled_note(window, y, x, text, CUSTOM_COLOR_PAIR_ERROR_NOTE);
+    render_styled_note(window, y, x, text, COLOR_PAIR_ERROR);
 }
 
 void render_form(
@@ -324,11 +320,7 @@ void render_form(
         }
         if (field->readonly)
         {
-            int dim_attrs = COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM);
-            if (!colors_has_extended())
-            {
-                dim_attrs |= A_DIM;
-            }
+            int dim_attrs = COLOR_PAIR(COLOR_PAIR_DIM) | A_DIM;
             wattron(window, dim_attrs);
         }
 
@@ -349,11 +341,7 @@ void render_form(
         // Disable field styling after rendering.
         if (field->readonly)
         {
-            int dim_attrs = COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM);
-            if (!colors_has_extended())
-            {
-                dim_attrs |= A_DIM;
-            }
+            int dim_attrs = COLOR_PAIR(COLOR_PAIR_DIM) | A_DIM;
             wattroff(window, dim_attrs);
         }
         if (is_focused && !field->readonly)
@@ -440,11 +428,7 @@ FormResult handle_form_key(
 void render_footer(WINDOW *modal, const char **items)
 {
     // Compute dim attributes (use A_DIM on 8-color terminals).
-    int dim_attrs = COLOR_PAIR(CUSTOM_COLOR_PAIR_DIM);
-    if (!colors_has_extended())
-    {
-        dim_attrs |= A_DIM;
-    }
+    int dim_attrs = COLOR_PAIR(COLOR_PAIR_DIM) | A_DIM;
 
     // Iterate through footer items and render each one.
     int x = 3;

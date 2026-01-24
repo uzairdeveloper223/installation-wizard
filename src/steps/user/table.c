@@ -21,7 +21,7 @@ void render_user_table(
     }
 
     // Render column headers with darker background.
-    wattron(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_HEADER));
+    wattron(modal, COLOR_PAIR(COLOR_PAIR_HEADER));
     char header[80];
     snprintf(
         header, sizeof(header),
@@ -32,7 +32,7 @@ void render_user_table(
         USER_COL_WIDTH_PRIMARY, "Primary"
     );
     mvwprintw(modal, 6, 3, "%-*s", table_width, header);
-    wattroff(modal, COLOR_PAIR(CUSTOM_COLOR_PAIR_HEADER));
+    wattroff(modal, COLOR_PAIR(COLOR_PAIR_HEADER));
 
     // Render user rows.
     for (int i = 0; i < MAX_VISIBLE_USERS; i++)
@@ -41,8 +41,8 @@ void render_user_table(
 
         // Apply alternating row background color.
         int row_color = (user_index % 2 == 0)
-            ? CUSTOM_COLOR_PAIR_ROW_ODD
-            : CUSTOM_COLOR_PAIR_ROW_EVEN;
+            ? COLOR_PAIR_ROW
+            : COLOR_PAIR_ROW;
         wattron(modal, COLOR_PAIR(row_color));
 
         if (user_index < store->user_count)

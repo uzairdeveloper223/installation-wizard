@@ -16,14 +16,14 @@ WINDOW *create_modal(const char *title)
 
     // Create window with background color.
     WINDOW *window = newwin(MODAL_HEIGHT, MODAL_WIDTH, start_y, start_x);
-    wbkgd(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_MAIN));
+    wbkgd(window, COLOR_PAIR(COLOR_PAIR_MAIN));
 
     // Draw full-width title bar with lighter background.
-    wattron(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_ROW_ODD));
+    wattron(window, COLOR_PAIR(COLOR_PAIR_ROW));
     mvwprintw(window, 0, 0, "%*s", MODAL_WIDTH, "");
     int title_x = (MODAL_WIDTH - strlen(title)) / 2;
     mvwprintw(window, 0, title_x, "%s", title);
-    wattroff(window, COLOR_PAIR(CUSTOM_COLOR_PAIR_ROW_ODD));
+    wattroff(window, COLOR_PAIR(COLOR_PAIR_ROW));
 
     wrefresh(window);
 

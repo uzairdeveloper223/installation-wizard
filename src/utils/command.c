@@ -6,11 +6,11 @@
 #include "../all.h"
 
 static FILE *dry_run_log = NULL;
-static CommandPollCallback poll_callback = NULL;
+static CommandTickCallback tick_callback = NULL;
 
-void set_command_poll_callback(CommandPollCallback callback)
+void set_command_tick_callback(CommandTickCallback callback)
 {
-    poll_callback = callback;
+    tick_callback = callback;
 }
 
 int run_command(const char *command)
@@ -23,7 +23,7 @@ int run_command(const char *command)
         // Open log file if not already open.
         if (!dry_run_log)
         {
-            dry_run_log = fopen(DRY_RUN_LOG_PATH, "w");
+            dry_run_log = fopen(CONFIG_DRY_RUN_LOG_PATH, "w");
         }
 
         // Write command to log file.
@@ -35,13 +35,13 @@ int run_command(const char *command)
         return 0;
     }
 
-    // If no poll callback, use simple blocking execution.
-    if (!poll_callback)
+    // If no tick callback, use simple blocking execution.
+    if (!tick_callback)
     {
         return system(command);
     }
 
-    // Fork and exec to allow polling for input during execution.
+    // Fork and exec to allow periodic updates during execution.
     pid_t pid = fork();
     if (pid < 0)
     {
@@ -56,7 +56,7 @@ int run_command(const char *command)
         _exit(127); // exec failed
     }
 
-    // Parent process: poll for completion while checking input.
+    // Parent process: wait for completion while invoking tick callback.
     int status;
     while (1)
     {
@@ -72,13 +72,13 @@ int run_command(const char *command)
         }
         if (result < 0)
         {
-            return -1; // waitpid error
+            return -2; // waitpid error
         }
 
-        // Child still running, invoke poll callback.
-        if (poll_callback)
+        // Child still running, invoke tick callback.
+        if (tick_callback)
         {
-            poll_callback();
+            tick_callback();
         }
 
         // Small delay to avoid busy-waiting.
