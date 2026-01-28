@@ -667,9 +667,28 @@ int autofill_partitions(Store *store, unsigned long long disk_size)
         }
     }
 
+    // Determine optimal root partition size:
+    // If remaining space is within 5GB of a preset, use the preset for a cleaner number.
+    // If the difference is larger than 5GB, fill the remaining space entirely.
+    const unsigned long long THRESHOLD = 5ULL * 1000000000; // 5GB threshold
+    unsigned long long preset_size = size_presets[root_index];
+    unsigned long long difference = root_size - preset_size;
+    unsigned long long final_root_size;
+
+    if (difference <= THRESHOLD)
+    {
+        // Small difference: use the clean preset size.
+        final_root_size = preset_size;
+    }
+    else
+    {
+        // Large difference: fill remaining space to avoid wasting disk space.
+        final_root_size = root_size;
+    }
+
     // Configure root partition with the calculated size.
     Partition root = {0};
-    root.size_bytes = size_presets[root_index];
+    root.size_bytes = final_root_size;
     strncpy(root.mount_point, "/", sizeof(root.mount_point));
     root.filesystem = FS_EXT4;
     root.type = PART_PRIMARY;
